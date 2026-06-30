@@ -303,6 +303,7 @@ export class MemoryChatPersistence extends BaseChatPersistence implements ChatPe
       mentions: prepared.mentions,
       model: prepared.model,
       usage: prepared.usage,
+      signature: input.signature,
       createdAtMs: prepared.createdAtMs,
     };
 

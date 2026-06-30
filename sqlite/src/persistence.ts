@@ -609,7 +609,7 @@ export class SqliteChatPersistence extends BaseChatPersistence implements ChatPe
           prepared.usage ? JSON.stringify(prepared.usage) : null,
           prepared.contentHash,
           prepared.lineageHash,
-          null,
+          input.signature ? JSON.stringify(input.signature) : null,
           input.idempotencyKey ?? null,
           prepared.createdAtMs,
         );

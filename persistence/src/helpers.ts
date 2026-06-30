@@ -27,8 +27,8 @@ export function prepareAppendPost(
   const generate = options.generateId ?? createId;
   const now = options.now ?? (() => Date.now());
   const postId = input.message.id || generate();
-  const versionId = generate();
-  const createdAtMs = now();
+  const versionId = input.versionId ?? generate();
+  const createdAtMs = input.createdAtMs ?? now();
   const message: UIMessage = { ...input.message, id: postId };
 
   const contentHash = computeContentHash({

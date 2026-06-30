@@ -34,6 +34,9 @@ export type AppendPostInput = {
   usage?: import("./types.ts").PostUsage;
   expectedHeadPostVersionId?: string | null;
   idempotencyKey?: string;
+  signature?: import("./types.ts").SignedEnvelope;
+  versionId?: string;
+  createdAtMs?: number;
 };
 
 export type EditPostInput = {

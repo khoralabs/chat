@@ -611,7 +611,7 @@ export class TursoChatPersistence extends BaseChatPersistence implements ChatPer
           prepared.usage ? JSON.stringify(prepared.usage) : null,
           prepared.contentHash,
           prepared.lineageHash,
-          null,
+          input.signature ? JSON.stringify(input.signature) : null,
           input.idempotencyKey ?? null,
           prepared.createdAtMs,
         ],
