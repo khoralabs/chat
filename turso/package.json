@@ -24,7 +24,7 @@
     "@khoralabs/chat-core": "workspace:*",
     "@khoralabs/chat-persistence": "workspace:*",
     "@tursodatabase/serverless": "latest",
-    "ai": "^6.0.205"
+    "ai": "^7.0.9"
   },
   "devDependencies": {
     "@types/bun": "latest",

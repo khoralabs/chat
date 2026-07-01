@@ -13,7 +13,7 @@
     "@khoralabs/chat-persistence": "workspace:*",
     "@khoralabs/chat-persistence-sqlite": "workspace:*",
     "@khoralabs/chat-react": "workspace:*",
-    "ai": "^6.0.205",
+    "ai": "^7.0.9",
     "bun-plugin-tailwind": "^0.1.2",
     "react": "^19",
     "react-dom": "^19",
