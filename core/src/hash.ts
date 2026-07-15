@@ -7,6 +7,9 @@ export function sha256Hex(input: string | Uint8Array): string {
 }
 
 function stableStringify(value: unknown): string {
+  if (value === undefined) {
+    return "null";
+  }
   if (value === null || typeof value !== "object") {
     return JSON.stringify(value);
   }
