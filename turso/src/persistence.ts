@@ -24,6 +24,7 @@ import type {
   ThreadHead,
   ThreadPage,
   ThreadRoot,
+  ThreadTip,
 } from "@khoralabs/chat-core";
 import {
   ChatConflictError,
@@ -376,10 +377,18 @@ export class TursoChatPersistence extends BaseChatPersistence implements ChatPer
     };
   }
 
+  async getThreadTip(threadId: string): Promise<ThreadTip | null> {
+    const head = await this.getThreadHead(threadId);
+    if (!head) return null;
+    const version = await this.getPostVersion(head.headPostVersionId);
+    if (!version) return null;
+    return { id: version.id, lineageHash: version.lineageHash };
+  }
+
   async listThreads(input: ListThreadsInput): Promise<ThreadPage> {
     const limit = input.limit ?? 50;
     const start = input.cursor ? Number.parseInt(input.cursor, 10) : 0;
-    let rows: Array<{
+    type ThreadRow = {
       id: string;
       root_type: string;
       root_id: string;
@@ -388,28 +397,9 @@ export class TursoChatPersistence extends BaseChatPersistence implements ChatPer
       metadata: string | null;
       created_at_ms: number;
       archived_at_ms: number | null;
-    }>;
+    };
 
-    if (input.channelId) {
-      rows = await all(
-        this.db,
-        `SELECT * FROM chat_threads
-         WHERE root_type = 'channel' AND root_id = ?
-         ORDER BY created_at_ms ASC`,
-        [input.channelId],
-      );
-    } else if (input.postId) {
-      rows = await all(
-        this.db,
-        `SELECT * FROM chat_threads
-         WHERE root_type = 'post' AND root_id = ?
-         ORDER BY created_at_ms ASC`,
-        [input.postId],
-      );
-    } else {
-      rows = await all(this.db, "SELECT * FROM chat_threads ORDER BY created_at_ms ASC");
-    }
-
+    const rows = (await this.listThreadRows(input)) as ThreadRow[];
     const page = rows.slice(start, start + limit);
     return {
       items: page.map((row) => ({
@@ -422,6 +412,64 @@ export class TursoChatPersistence extends BaseChatPersistence implements ChatPer
       })),
       nextCursor: start + limit < rows.length ? String(start + limit) : null,
     };
+  }
+
+  private async listThreadRows(input: ListThreadsInput): Promise<unknown[]> {
+    const participant = input.participant;
+    if (participant && input.channelId) {
+      return all(
+        this.db,
+        `SELECT t.*
+         FROM chat_threads t
+         INNER JOIN chat_thread_participants p ON p.thread_id = t.id
+         WHERE p.scope_type = ? AND p.scope_id = ?
+           AND t.root_type = 'channel' AND t.root_id = ?
+         ORDER BY t.created_at_ms ASC`,
+        [participant.type, participant.id, input.channelId],
+      );
+    }
+    if (participant && input.postId) {
+      return all(
+        this.db,
+        `SELECT t.*
+         FROM chat_threads t
+         INNER JOIN chat_thread_participants p ON p.thread_id = t.id
+         WHERE p.scope_type = ? AND p.scope_id = ?
+           AND t.root_type = 'post' AND t.root_id = ?
+         ORDER BY t.created_at_ms ASC`,
+        [participant.type, participant.id, input.postId],
+      );
+    }
+    if (participant) {
+      return all(
+        this.db,
+        `SELECT t.*
+         FROM chat_threads t
+         INNER JOIN chat_thread_participants p ON p.thread_id = t.id
+         WHERE p.scope_type = ? AND p.scope_id = ?
+         ORDER BY t.created_at_ms ASC`,
+        [participant.type, participant.id],
+      );
+    }
+    if (input.channelId) {
+      return all(
+        this.db,
+        `SELECT * FROM chat_threads
+         WHERE root_type = 'channel' AND root_id = ?
+         ORDER BY created_at_ms ASC`,
+        [input.channelId],
+      );
+    }
+    if (input.postId) {
+      return all(
+        this.db,
+        `SELECT * FROM chat_threads
+         WHERE root_type = 'post' AND root_id = ?
+         ORDER BY created_at_ms ASC`,
+        [input.postId],
+      );
+    }
+    return all(this.db, "SELECT * FROM chat_threads ORDER BY created_at_ms ASC");
   }
 
   async listPosts(input: ListPostsInput): Promise<PostPage> {

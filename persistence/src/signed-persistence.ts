@@ -49,23 +49,12 @@ function preparedToSignable(prepared: PreparedAppendPost): SignablePostVersion {
   };
 }
 
-async function resolveThreadTip(
-  persistence: ChatPersistence,
-  threadId: string,
-): Promise<{ id: string; lineageHash: string } | null> {
-  const head = await persistence.getThreadHead(threadId);
-  if (!head) return null;
-  const version = await persistence.getPostVersion(head.headPostVersionId);
-  if (!version) return null;
-  return { id: version.id, lineageHash: version.lineageHash };
-}
-
 /** Tip lookup + prepareAppendPost for host-side signing before append. */
 export async function prepareAppendForSigning(
   persistence: ChatPersistence,
   input: AppendPostInput,
 ): Promise<PreparedAppendPost> {
-  const tip = await resolveThreadTip(persistence, input.threadId);
+  const tip = await persistence.getThreadTip(input.threadId);
   return prepareAppendPost({
     ...input,
     previousPostVersionId: tip?.id ?? null,

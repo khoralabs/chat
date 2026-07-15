@@ -15,6 +15,7 @@ import type {
   Thread,
   ThreadHead,
   ThreadPage,
+  ThreadTip,
 } from "@khoralabs/chat-core";
 import {
   ChatConflictError,
@@ -52,6 +53,7 @@ export type ChatService = {
   getPost(id: string): Promise<Post>;
   listThreads(input: ListThreadsInput): Promise<ThreadPage>;
   listPosts(input: ListPostsInput): Promise<PostPage>;
+  getThreadTip(threadId: string): Promise<ThreadTip | null>;
   appendPost(input: AppendPostInput): Promise<{ post: Post; head: ThreadHead }>;
   editPost(input: EditPostInput): Promise<{ post: Post; head: ThreadHead }>;
   deletePost(input: DeletePostInput): Promise<Post>;
@@ -123,6 +125,7 @@ export function createChatService(
 
     listThreads: (input) => persistence.listThreads(input),
     listPosts: (input) => persistence.listPosts(input),
+    getThreadTip: (threadId) => persistence.getThreadTip(threadId),
 
     async appendPost(input) {
       const result = await persistence.appendPost(input);

@@ -35,6 +35,7 @@ import type {
   Thread,
   ThreadHead,
   ThreadPage,
+  ThreadTip,
 } from "@khoralabs/chat-core";
 import {
   ChatConflictError,
@@ -201,6 +202,14 @@ export class MemoryChatPersistence extends BaseChatPersistence implements ChatPe
     return head?.threadId === threadId ? head : null;
   }
 
+  async getThreadTip(threadId: string): Promise<ThreadTip | null> {
+    const head = await this.getThreadHead(threadId);
+    if (!head) return null;
+    const version = await this.getPostVersion(head.headPostVersionId);
+    if (!version) return null;
+    return { id: version.id, lineageHash: version.lineageHash };
+  }
+
   async listThreads(input: ListThreadsInput): Promise<ThreadPage> {
     const limit = input.limit ?? 50;
     let items = [...this.threads.values()];
@@ -213,6 +222,10 @@ export class MemoryChatPersistence extends BaseChatPersistence implements ChatPe
       items = items.filter(
         (thread) => thread.root.type === "post" && thread.root.postId === input.postId,
       );
+    }
+    if (input.participant) {
+      const key = scopeKey(input.participant);
+      items = items.filter((thread) => this.threadParticipants.get(thread.id)?.has(key));
     }
     items.sort((a, b) => a.createdAtMs - b.createdAtMs);
     const start = input.cursor ? Number.parseInt(input.cursor, 10) : 0;

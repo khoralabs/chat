@@ -25,6 +25,7 @@ import type {
   ThreadHead,
   ThreadPage,
   ThreadRoot,
+  ThreadTip,
 } from "@khoralabs/chat-core";
 import {
   ChatConflictError,
@@ -371,10 +372,18 @@ export class SqliteChatPersistence extends BaseChatPersistence implements ChatPe
     };
   }
 
+  async getThreadTip(threadId: string): Promise<ThreadTip | null> {
+    const head = await this.getThreadHead(threadId);
+    if (!head) return null;
+    const version = await this.getPostVersion(head.headPostVersionId);
+    if (!version) return null;
+    return { id: version.id, lineageHash: version.lineageHash };
+  }
+
   async listThreads(input: ListThreadsInput): Promise<ThreadPage> {
     const limit = input.limit ?? 50;
     const start = input.cursor ? Number.parseInt(input.cursor, 10) : 0;
-    let rows: Array<{
+    type ThreadRow = {
       id: string;
       root_type: string;
       root_id: string;
@@ -383,30 +392,9 @@ export class SqliteChatPersistence extends BaseChatPersistence implements ChatPe
       metadata: string | null;
       created_at_ms: number;
       archived_at_ms: number | null;
-    }>;
+    };
 
-    if (input.channelId) {
-      rows = this.db
-        .prepare(
-          `SELECT * FROM chat_threads
-           WHERE root_type = 'channel' AND root_id = ?
-           ORDER BY created_at_ms ASC`,
-        )
-        .all(input.channelId) as typeof rows;
-    } else if (input.postId) {
-      rows = this.db
-        .prepare(
-          `SELECT * FROM chat_threads
-           WHERE root_type = 'post' AND root_id = ?
-           ORDER BY created_at_ms ASC`,
-        )
-        .all(input.postId) as typeof rows;
-    } else {
-      rows = this.db
-        .prepare("SELECT * FROM chat_threads ORDER BY created_at_ms ASC")
-        .all() as typeof rows;
-    }
-
+    const rows = this.listThreadRows(input) as ThreadRow[];
     const page = rows.slice(start, start + limit);
     return {
       items: page.map((row) => ({
@@ -419,6 +407,64 @@ export class SqliteChatPersistence extends BaseChatPersistence implements ChatPe
       })),
       nextCursor: start + limit < rows.length ? String(start + limit) : null,
     };
+  }
+
+  private listThreadRows(input: ListThreadsInput): unknown[] {
+    const participant = input.participant;
+    if (participant && input.channelId) {
+      return this.db
+        .prepare(
+          `SELECT t.*
+           FROM chat_threads t
+           INNER JOIN chat_thread_participants p ON p.thread_id = t.id
+           WHERE p.scope_type = ? AND p.scope_id = ?
+             AND t.root_type = 'channel' AND t.root_id = ?
+           ORDER BY t.created_at_ms ASC`,
+        )
+        .all(participant.type, participant.id, input.channelId);
+    }
+    if (participant && input.postId) {
+      return this.db
+        .prepare(
+          `SELECT t.*
+           FROM chat_threads t
+           INNER JOIN chat_thread_participants p ON p.thread_id = t.id
+           WHERE p.scope_type = ? AND p.scope_id = ?
+             AND t.root_type = 'post' AND t.root_id = ?
+           ORDER BY t.created_at_ms ASC`,
+        )
+        .all(participant.type, participant.id, input.postId);
+    }
+    if (participant) {
+      return this.db
+        .prepare(
+          `SELECT t.*
+           FROM chat_threads t
+           INNER JOIN chat_thread_participants p ON p.thread_id = t.id
+           WHERE p.scope_type = ? AND p.scope_id = ?
+           ORDER BY t.created_at_ms ASC`,
+        )
+        .all(participant.type, participant.id);
+    }
+    if (input.channelId) {
+      return this.db
+        .prepare(
+          `SELECT * FROM chat_threads
+           WHERE root_type = 'channel' AND root_id = ?
+           ORDER BY created_at_ms ASC`,
+        )
+        .all(input.channelId);
+    }
+    if (input.postId) {
+      return this.db
+        .prepare(
+          `SELECT * FROM chat_threads
+           WHERE root_type = 'post' AND root_id = ?
+           ORDER BY created_at_ms ASC`,
+        )
+        .all(input.postId);
+    }
+    return this.db.prepare("SELECT * FROM chat_threads ORDER BY created_at_ms ASC").all();
   }
 
   async listPosts(input: ListPostsInput): Promise<PostPage> {

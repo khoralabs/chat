@@ -8,6 +8,11 @@ Bun SQLite adapter for the generic chat ledger.
 - `ensureChatSqliteSchema(db)`
 - `createChatDatabase(path?)` — convenience helper for tests/tools
 
+Common host queries live on the persistence port (adapter implementations):
+
+- `getThreadTip(threadId)` — default-head version id + lineage hash
+- `listThreads({ channelId, participant })` — participant-scoped threads under a channel
+
 ## SQLite assumptions
 
 Matches project-wide SQLite usage:

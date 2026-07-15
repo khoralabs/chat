@@ -357,6 +357,76 @@ export function runChatPersistenceContractTests(
       expect(rebuilt.parts[0]).toEqual({ type: "text", text: "ab" });
     });
 
+    test("getThreadTip returns default-head lineage tip", async () => {
+      const persistence = await createPersistence();
+      const channel = await persistence.createChannel({});
+      const thread = await persistence.createThread({
+        root: { type: "channel", channelId: channel.id },
+      });
+      expect(await persistence.getThreadTip(thread.id)).toBeNull();
+
+      const author = { type: "account", id: "user-1" };
+      const first = await persistence.appendPost({
+        threadId: thread.id,
+        author,
+        message: { id: "m1", role: "user", parts: [{ type: "text", text: "one" }] },
+      });
+      expect(first.ok).toBe(true);
+      if (!first.ok || first.post.status !== "complete") return;
+
+      const tip = await persistence.getThreadTip(thread.id);
+      expect(tip).toEqual({
+        id: first.post.versionId,
+        lineageHash: first.post.lineageHash,
+      });
+    });
+
+    test("listThreads filters by participant and channel", async () => {
+      const persistence = await createPersistence();
+      const channel = await persistence.createChannel({});
+      const alice = { type: "account", id: "alice" };
+      const bob = { type: "account", id: "bob" };
+      const shared = await persistence.createThread({
+        root: { type: "channel", channelId: channel.id },
+      });
+      const privateThread = await persistence.createThread({
+        root: { type: "channel", channelId: channel.id },
+      });
+
+      await persistence.addThreadParticipant({
+        threadId: shared.id,
+        scope: alice,
+        role: "owner",
+        actor: alice,
+      });
+      await persistence.addThreadParticipant({
+        threadId: shared.id,
+        scope: bob,
+        role: "participant",
+        actor: alice,
+      });
+      await persistence.addThreadParticipant({
+        threadId: privateThread.id,
+        scope: alice,
+        role: "owner",
+        actor: alice,
+      });
+
+      const bobThreads = await persistence.listThreads({
+        channelId: channel.id,
+        participant: bob,
+      });
+      expect(bobThreads.items.map((thread) => thread.id)).toEqual([shared.id]);
+
+      const aliceThreads = await persistence.listThreads({
+        channelId: channel.id,
+        participant: alice,
+      });
+      expect(aliceThreads.items.map((thread) => thread.id).sort()).toEqual(
+        [shared.id, privateThread.id].sort(),
+      );
+    });
+
     test("setPostVersionSignature persists and overwrites", async () => {
       const persistence = await createPersistence();
       const channel = await persistence.createChannel({});

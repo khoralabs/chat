@@ -12,6 +12,7 @@ import type {
   ThreadHead,
   ThreadPage,
   ThreadRoot,
+  ThreadTip,
 } from "./types.ts";
 
 export type CreateChannelInput = {
@@ -59,6 +60,8 @@ export type DeletePostInput = {
 export type ListThreadsInput = {
   channelId?: string;
   postId?: string;
+  /** When set, only threads where this scope is a participant. */
+  participant?: ScopeRef;
   cursor?: string;
   limit?: number;
 };
@@ -166,6 +169,8 @@ export type ChatReadPersistence = {
   getPost(id: string): Promise<Post | null>;
   getPostVersion(id: string): Promise<PostVersion | null>;
   getThreadHead(threadId: string, headId?: string): Promise<ThreadHead | null>;
+  /** Tip of the thread default head (`id` + `lineageHash`), or null if empty. */
+  getThreadTip(threadId: string): Promise<ThreadTip | null>;
   listThreads(input: ListThreadsInput): Promise<ThreadPage>;
   listPosts(input: ListPostsInput): Promise<PostPage>;
   listChannelMembers(channelId: string): Promise<ScopeRef[]>;

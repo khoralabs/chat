@@ -64,6 +64,12 @@ export type ThreadHead = {
   createdAtMs: number;
 };
 
+/** Default-head tip version for append lineage / provenance. */
+export type ThreadTip = {
+  id: string;
+  lineageHash: string;
+};
+
 export type PostVersion = Omit<UIMessage, "id"> & {
   id: string;
   postId: string;
