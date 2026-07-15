@@ -942,6 +942,15 @@ export class MemoryChatPersistence extends BaseChatPersistence implements ChatPe
       deletedAtMs: record.deletedAtMs,
     });
   }
+
+  async setPostVersionSignature(
+    versionId: string,
+    signature: import("@khoralabs/chat-core").SignedEnvelope,
+  ): Promise<void> {
+    const version = this.versions.get(versionId);
+    if (!version) throw new ChatNotFoundError("post_version", versionId);
+    this.versions.set(versionId, { ...version, signature });
+  }
 }
 
 export function createMemoryChatPersistence(): MemoryChatPersistence {

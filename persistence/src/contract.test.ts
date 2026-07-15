@@ -356,5 +356,41 @@ export function runChatPersistenceContractTests(
       const rebuilt = await persistence.rebuildStreamedPostCache(started.post.id);
       expect(rebuilt.parts[0]).toEqual({ type: "text", text: "ab" });
     });
+
+    test("setPostVersionSignature persists and overwrites", async () => {
+      const persistence = await createPersistence();
+      const channel = await persistence.createChannel({});
+      const thread = await persistence.createThread({
+        root: { type: "channel", channelId: channel.id },
+      });
+      const author = { type: "account", id: "user-1" };
+      const appended = await persistence.appendPost({
+        threadId: thread.id,
+        author,
+        message: { id: "m-sig", role: "user", parts: [{ type: "text", text: "signed" }] },
+      });
+      expect(appended.ok).toBe(true);
+      if (!appended.ok || appended.post.status !== "complete") return;
+
+      const versionId = appended.post.versionId;
+      const envelope = {
+        algorithm: "test",
+        signer: author,
+        signature: "sig-1",
+        signedAtMs: Date.now(),
+      };
+      await persistence.setPostVersionSignature(versionId, envelope);
+      const version = await persistence.getPostVersion(versionId);
+      expect(version?.signature).toEqual(envelope);
+
+      const overwrite = { ...envelope, signature: "sig-2" };
+      await persistence.setPostVersionSignature(versionId, overwrite);
+      const updated = await persistence.getPostVersion(versionId);
+      expect(updated?.signature).toEqual(overwrite);
+
+      await expect(
+        persistence.setPostVersionSignature("missing-version", envelope),
+      ).rejects.toThrow(/not found/);
+    });
   });
 }

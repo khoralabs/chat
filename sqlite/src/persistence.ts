@@ -1132,6 +1132,21 @@ export class SqliteChatPersistence extends BaseChatPersistence implements ChatPe
       this.getPostVersionSync(versionId),
     );
   }
+
+  async setPostVersionSignature(
+    versionId: string,
+    signature: import("@khoralabs/chat-core").SignedEnvelope,
+  ): Promise<void> {
+    const existing = this.db
+      .prepare("SELECT id FROM chat_post_versions WHERE id = ?")
+      .get(versionId) as { id: string } | null;
+    if (!existing) {
+      throw new ChatNotFoundError("post_version", versionId);
+    }
+    this.db
+      .prepare("UPDATE chat_post_versions SET signature = ? WHERE id = ?")
+      .run(JSON.stringify(signature), versionId);
+  }
 }
 
 export function createSqliteChatPersistence(db: Database): SqliteChatPersistence {

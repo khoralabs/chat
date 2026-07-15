@@ -1144,6 +1144,21 @@ export class TursoChatPersistence extends BaseChatPersistence implements ChatPer
   async rebuildStreamedPostCache(postId: string) {
     return rebuildStreamedPostCache(this.db, postId, () => null);
   }
+
+  async setPostVersionSignature(versionId: string, signature: SignedEnvelope): Promise<void> {
+    const existing = await get<{ id: string }>(
+      this.db,
+      "SELECT id FROM chat_post_versions WHERE id = ?",
+      [versionId],
+    );
+    if (!existing) {
+      throw new ChatNotFoundError("post_version", versionId);
+    }
+    await run(this.db, "UPDATE chat_post_versions SET signature = ? WHERE id = ?", [
+      JSON.stringify(signature),
+      versionId,
+    ]);
+  }
 }
 
 export function createTursoChatPersistence(db: SqlDatabase): TursoChatPersistence {

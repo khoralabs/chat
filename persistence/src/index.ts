@@ -30,3 +30,9 @@ export * from "./base-persistence.ts";
 export { runChatPersistenceContractTests } from "./contract.test.ts";
 export * from "./helpers.ts";
 export * from "./memory-persistence.ts";
+export {
+  prepareAppendForSigning,
+  type SignedChatPersistenceOptions,
+  signPreparedAppendPost,
+  withSignedChatPersistence,
+} from "./signed-persistence.ts";

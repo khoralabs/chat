@@ -198,6 +198,11 @@ export type ChatWritePersistence = {
   completeStreamedPost(input: CompleteStreamedPostInput): Promise<CompleteStreamedPostResult>;
   abortStreamedPost(input: AbortStreamedPostInput): Promise<AbortStreamedPostResult>;
   rebuildStreamedPostCache(postId: string): Promise<import("./types.ts").StreamingPost>;
+  /** Persist a signature on an existing post version (idempotent overwrite). */
+  setPostVersionSignature(
+    versionId: string,
+    signature: import("./types.ts").SignedEnvelope,
+  ): Promise<void>;
 };
 
 export type ChatPersistence = ChatReadPersistence & ChatWritePersistence;
