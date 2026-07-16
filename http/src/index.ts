@@ -22,13 +22,16 @@ export {
   requireInternalToken,
 } from "./routes.ts";
 export {
+  type ChatHttpServerHandle,
+  type StartChatHttpServerOptions,
+  startChatHttpServer,
+} from "./server.ts";
+export {
   type ChatHttpRuntime,
+  type ChatStorage,
+  type ChatStorageConfig,
   type CreateChatHttpRuntimeOptions,
-  closeChatDb,
   createChatHttpRuntime,
-  getChatDb,
-  getChatService,
-  initChatStorage,
+  createChatStorage,
   isChatNotFound,
-  subscribeToChatThread,
 } from "./service.ts";

@@ -8,7 +8,7 @@ import { createMemoryChatPersistence } from "@khoralabs/chat-persistence";
 import { createChatClient } from "./client.ts";
 import { resolveChatDbPath } from "./config.ts";
 import { createChatRoutesWithParams, dispatchChatRoute } from "./routes.ts";
-import { closeChatDb, createChatHttpRuntime } from "./service.ts";
+import { createChatHttpRuntime } from "./service.ts";
 
 const TEST_TOKEN = "test-chat-token";
 let dataDir: string;
@@ -16,17 +16,12 @@ let dataDir: string;
 beforeEach(() => {
   dataDir = mkdtempSync(path.join(tmpdir(), "chat-http-test-"));
   process.env.CHAT_DATA_DIR = dataDir;
-  process.env.CHAT_INTERNAL_TOKEN = TEST_TOKEN;
-  closeChatDb();
 });
 
 afterEach(() => {
-  closeChatDb();
   rmSync(dataDir, { recursive: true, force: true });
   delete process.env.CHAT_DATA_DIR;
   delete process.env.CHAT_DB_PATH;
-  delete process.env.CHAT_INTERNAL_TOKEN;
-  delete process.env.TURSO_DATABASE_URL;
 });
 
 function createTestClient() {
