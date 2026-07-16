@@ -9,7 +9,7 @@
     "check:write": "biome check --write .",
     "format": "biome check --write .",
     "format:check": "biome check .",
-    "typecheck": "bun run --filter './core' typecheck && bun run --filter './persistence' typecheck && bun run --filter './sqlite' typecheck && bun run --filter './turso' typecheck && bun run --filter './react' typecheck",
+    "typecheck": "bun run --filter './core' typecheck && bun run --filter './persistence' typecheck && bun run --filter './sqlite' typecheck && bun run --filter './turso' typecheck && bun run --filter './http' typecheck && bun run --filter './react' typecheck",
     "test": "bun test",
     "prepare": "husky"
   },

@@ -10,6 +10,7 @@ import type {
   Post,
   PostPage,
   ScopeRef,
+  SignedEnvelope,
   StartStreamedPostInput,
   StartStreamedPostResult,
   Thread,
@@ -72,6 +73,7 @@ export type ChatService = {
   applyPostDelta(input: ApplyPostDeltaInput): Promise<ApplyPostDeltaResult>;
   completeStreamedPost(input: CompleteStreamedPostInput): Promise<{ post: Post; head: ThreadHead }>;
   abortStreamedPost(input: AbortStreamedPostInput): Promise<AbortStreamedPostResult["post"]>;
+  setPostVersionSignature(versionId: string, signature: SignedEnvelope): Promise<void>;
 };
 
 export function createChatService(
@@ -248,6 +250,10 @@ export function createChatService(
         deletedAtMs: result.post.deletedAtMs ?? Date.now(),
       });
       return result.post;
+    },
+
+    setPostVersionSignature(versionId, signature) {
+      return persistence.setPostVersionSignature(versionId, signature);
     },
   };
 }

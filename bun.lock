@@ -49,6 +49,23 @@
         "@types/react-dom": "^19",
       },
     },
+    "http": {
+      "name": "@khoralabs/chat-http",
+      "version": "0.0.0",
+      "dependencies": {
+        "@khoralabs/chat-core": "workspace:*",
+        "@khoralabs/chat-persistence-turso": "workspace:*",
+        "ai": "^7.0.9",
+      },
+      "devDependencies": {
+        "@khoralabs/chat-persistence": "workspace:*",
+        "@types/bun": "latest",
+        "typescript": "^5",
+      },
+      "peerDependencies": {
+        "typescript": "^5",
+      },
+    },
     "persistence": {
       "name": "@khoralabs/chat-persistence",
       "version": "0.0.0",
@@ -268,6 +285,8 @@
     "@khoralabs/chat-core": ["@khoralabs/chat-core@workspace:core"],
 
     "@khoralabs/chat-example": ["@khoralabs/chat-example@workspace:example"],
+
+    "@khoralabs/chat-http": ["@khoralabs/chat-http@workspace:http"],
 
     "@khoralabs/chat-persistence": ["@khoralabs/chat-persistence@workspace:persistence"],
 
