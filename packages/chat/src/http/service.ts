@@ -6,7 +6,7 @@ import {
   ensureChatSchema,
 } from "@khoralabs/chat/turso-serverless";
 import type { ChatEvent, ChatPersistence } from "../domain.ts";
-import { ChatNotFoundError } from "../domain.ts";
+import { type ChatNotFoundError, isChatNotFoundError } from "../errors.ts";
 import { type ChatService, createChatService } from "../service.ts";
 
 export type ChatHttpRuntime = {
@@ -94,5 +94,5 @@ export async function createChatStorage(config: ChatStorageConfig): Promise<Chat
 }
 
 export function isChatNotFound(error: unknown): error is ChatNotFoundError {
-  return error instanceof ChatNotFoundError;
+  return isChatNotFoundError(error);
 }

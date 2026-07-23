@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { createMemoryChatPersistence } from "@khoralabs/chat/persistence";
 import type { SignedEnvelope } from "../domain.ts";
+import { isChatNotFoundError } from "../errors.ts";
 
 import { createChatClient } from "./client.ts";
 import { resolveChatDbPath } from "./config.ts";
@@ -49,6 +50,19 @@ test("createChatHttpRuntime wires channels and threads", async () => {
     root: { type: "channel", channelId: "ch-1" },
   });
   expect(await client.getThread("th-1")).toMatchObject({ id: "th-1" });
+});
+
+test("missing channel returns ChatNotFoundError over HTTP (404)", async () => {
+  const client = createTestClient();
+  try {
+    await client.getChannel("missing-channel");
+    throw new Error("expected getChannel to reject");
+  } catch (error) {
+    expect(isChatNotFoundError(error)).toBe(true);
+    if (!isChatNotFoundError(error)) return;
+    expect(error.resource).toBe("channel");
+    expect(error.resourceId).toBe("missing-channel");
+  }
 });
 
 test("streamed post lifecycle works via routes", async () => {

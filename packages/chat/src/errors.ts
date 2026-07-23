@@ -46,3 +46,15 @@ export class ChatPermissionError extends ChatError {
     this.name = "ChatPermissionError";
   }
 }
+
+/** Duck-typed check — safe across multi-entrypoint bundles where `instanceof` can fail. */
+export function isChatNotFoundError(error: unknown): error is ChatNotFoundError {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    (error as Error).name === "ChatNotFoundError" &&
+    (error as ChatError).code === "not_found" &&
+    typeof (error as ChatNotFoundError).resource === "string" &&
+    typeof (error as ChatNotFoundError).resourceId === "string"
+  );
+}

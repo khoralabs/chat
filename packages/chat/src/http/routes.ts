@@ -1,6 +1,6 @@
 import type { UIMessage } from "ai";
 import type { PostModelMetadata, PostUsage, ScopeRef, SignedEnvelope } from "../domain.ts";
-import { ChatNotFoundError } from "../domain.ts";
+import { isChatNotFoundError } from "../errors.ts";
 import type { ChatService } from "../service.ts";
 
 function json(value: unknown, init?: ResponseInit): Response {
@@ -44,7 +44,7 @@ function stringField(body: Record<string, unknown>, key: string): string | null 
 }
 
 function errorResponse(error: unknown): Response {
-  if (error instanceof ChatNotFoundError) {
+  if (isChatNotFoundError(error)) {
     return json({ error: error.message }, { status: 404 });
   }
   const message = error instanceof Error ? error.message : String(error);
