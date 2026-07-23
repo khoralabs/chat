@@ -1,10 +1,7 @@
 import { Database } from "bun:sqlite";
-import type { ChatEvent, ChatService, JsonObject } from "@khoralabs/chat-core";
-import { ChatNotFoundError, createChatService } from "@khoralabs/chat-core";
-import {
-  createSqliteChatPersistence,
-  ensureChatSqliteSchema,
-} from "@khoralabs/chat-persistence-sqlite";
+import type { ChatEvent, ChatService, JsonObject } from "@khoralabs/chat";
+import { ChatNotFoundError, createChatService } from "@khoralabs/chat";
+import { createSqliteChatPersistence, ensureChatSqliteSchema } from "@khoralabs/chat/sqlite";
 import type { UIMessage } from "ai";
 import { serve } from "bun";
 import index from "./index.html";

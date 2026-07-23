@@ -1,4 +1,4 @@
-import type { Thread } from "@khoralabs/chat-core";
+import type { Thread } from "@khoralabs/chat";
 import type {
   AppendPostInput,
   Channel,

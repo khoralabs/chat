@@ -9,15 +9,13 @@
     "build": "bun run build.ts"
   },
   "dependencies": {
-    "@khoralabs/chat-core": "workspace:*",
-    "@khoralabs/chat-persistence": "workspace:*",
-    "@khoralabs/chat-persistence-sqlite": "workspace:*",
     "@khoralabs/chat-react": "workspace:*",
     "ai": "^7.0.9",
     "bun-plugin-tailwind": "^0.1.2",
     "react": "^19",
     "react-dom": "^19",
-    "tailwindcss": "^4.1.11"
+    "tailwindcss": "^4.1.11",
+    "@khoralabs/chat": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "^19",

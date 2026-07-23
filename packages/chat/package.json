@@ -1,0 +1,101 @@
+{
+  "name": "@khoralabs/chat",
+  "version": "0.1.0",
+  "description": "Signed chat ledger: service, persistence backends, and HTTP transport",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/khoralabs/chat.git",
+    "directory": "packages/chat"
+  },
+  "homepage": "https://github.com/khoralabs/chat/tree/main/packages/chat#readme",
+  "bugs": "https://github.com/khoralabs/chat/issues",
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "bun run ../../scripts/build-package.ts .",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "bun test",
+    "start:http": "bun src/http/server.ts"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./persistence": {
+      "types": "./src/persistence/core/persistence/index.ts",
+      "import": "./src/persistence/core/persistence/index.ts",
+      "default": "./src/persistence/core/persistence/index.ts"
+    },
+    "./sqlite": {
+      "types": "./src/persistence/sqlite/index.ts",
+      "import": "./src/persistence/sqlite/index.ts",
+      "default": "./src/persistence/sqlite/index.ts"
+    },
+    "./turso-serverless": {
+      "types": "./src/persistence/turso-serverless/index.ts",
+      "import": "./src/persistence/turso-serverless/index.ts",
+      "default": "./src/persistence/turso-serverless/index.ts"
+    },
+    "./turso-serverless/sql": {
+      "types": "./src/persistence/turso-serverless/persistence/sql.ts",
+      "import": "./src/persistence/turso-serverless/persistence/sql.ts",
+      "default": "./src/persistence/turso-serverless/persistence/sql.ts"
+    },
+    "./http": {
+      "types": "./src/http/index.ts",
+      "import": "./src/http/index.ts",
+      "default": "./src/http/index.ts"
+    },
+    "./http/client": {
+      "types": "./src/http/client.ts",
+      "import": "./src/http/client.ts",
+      "default": "./src/http/client.ts"
+    },
+    "./http/routes": {
+      "types": "./src/http/routes.ts",
+      "import": "./src/http/routes.ts",
+      "default": "./src/http/routes.ts"
+    },
+    "./http/service": {
+      "types": "./src/http/service.ts",
+      "import": "./src/http/service.ts",
+      "default": "./src/http/service.ts"
+    },
+    "./http/server": {
+      "types": "./src/http/server.ts",
+      "import": "./src/http/server.ts",
+      "default": "./src/http/server.ts"
+    },
+    "./testing": {
+      "types": "./src/persistence/testing/index.ts",
+      "import": "./src/persistence/testing/index.ts",
+      "default": "./src/persistence/testing/index.ts"
+    }
+  },
+  "dependencies": {
+    "ai": "^7.0.9"
+  },
+  "peerDependencies": {
+    "@tursodatabase/serverless": "*",
+    "typescript": "^5"
+  },
+  "peerDependenciesMeta": {
+    "@tursodatabase/serverless": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@tursodatabase/serverless": "latest",
+    "@types/bun": "latest",
+    "typescript": "^5"
+  }
+}
