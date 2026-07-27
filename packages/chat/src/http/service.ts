@@ -21,7 +21,7 @@ export type CreateChatHttpRuntimeOptions = {
 };
 
 export type ChatStorageConfig =
-  | { kind: "local-sqlite"; dbPath: string }
+  | { kind: "local-sqlite"; dbPath: string; sqlCipherKey?: string }
   | { kind: "turso"; url: string; authToken: string }
   | { kind: "custom"; persistence: ChatPersistence; close?: () => void };
 
@@ -84,7 +84,10 @@ export async function createChatStorage(config: ChatStorageConfig): Promise<Chat
     };
   }
 
-  const db = createLocalSqliteDatabase(config.dbPath);
+  const db = createLocalSqliteDatabase(
+    config.dbPath,
+    config.sqlCipherKey !== undefined ? { sqlCipherKey: config.sqlCipherKey } : {},
+  );
   return {
     persistence: createTursoChatPersistence(db),
     close() {

@@ -2,7 +2,12 @@ import { type ServerWebSocket, serve } from "bun";
 import type { ChatEvent } from "../domain.ts";
 import type { ChatService } from "../service.ts";
 
-import { chatHttpPort, chatInternalToken, resolveChatDbPath } from "./config.ts";
+import {
+  chatHttpPort,
+  chatInternalToken,
+  resolveChatDbPath,
+  sqlCipherKeyFromEnv,
+} from "./config.ts";
 import { createChatRoutesWithParams, dispatchChatRoute, requireInternalToken } from "./routes.ts";
 import { type ChatStorageConfig, createChatHttpRuntime, createChatStorage } from "./service.ts";
 
@@ -94,7 +99,12 @@ function storageConfigFromEnv(): ChatStorageConfig {
     }
     return { kind: "turso", url: tursoUrl, authToken };
   }
-  return { kind: "local-sqlite", dbPath: resolveChatDbPath() };
+  const sqlCipherKey = sqlCipherKeyFromEnv();
+  return {
+    kind: "local-sqlite",
+    dbPath: resolveChatDbPath(),
+    ...(sqlCipherKey !== undefined ? { sqlCipherKey } : {}),
+  };
 }
 
 if (import.meta.main) {

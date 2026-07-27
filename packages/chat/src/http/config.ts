@@ -1,5 +1,11 @@
 import path from "node:path";
 
+export {
+  CHAT_SQLCIPHER_ENV,
+  DEV_SQLCIPHER_KEY,
+  sqlCipherKeyFromEnv,
+} from "../persistence/sqlcipher.ts";
+
 export function resolveChatDataDir(): string {
   const raw = process.env.CHAT_DATA_DIR?.trim();
   if (raw !== undefined && raw.length > 0) return raw;

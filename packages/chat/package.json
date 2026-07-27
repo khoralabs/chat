@@ -85,15 +85,20 @@
     "ai": "^7.0.9"
   },
   "peerDependencies": {
+    "@khoralabs/sqlite-crypto": "^0.1.0",
     "@tursodatabase/serverless": "*",
     "typescript": "^5"
   },
   "peerDependenciesMeta": {
+    "@khoralabs/sqlite-crypto": {
+      "optional": true
+    },
     "@tursodatabase/serverless": {
       "optional": true
     }
   },
   "devDependencies": {
+    "@khoralabs/sqlite-crypto": "^0.1.0",
     "@tursodatabase/serverless": "latest",
     "@types/bun": "latest",
     "typescript": "^5"

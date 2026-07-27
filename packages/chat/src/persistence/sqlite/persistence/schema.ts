@@ -1,4 +1,5 @@
-import { Database, type Database as DatabaseType } from "bun:sqlite";
+import type { Database as DatabaseType } from "bun:sqlite";
+import { openChatSqliteDatabase } from "../../sqlcipher.ts";
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS chat_channels (
@@ -142,8 +143,16 @@ export function ensureChatSqliteSchema(db: DatabaseType, busyTimeoutMs = 5000): 
   }
 }
 
-export function createChatDatabase(path: ":memory:" | string = ":memory:"): DatabaseType {
-  const db = new Database(path);
+export type CreateChatDatabaseOptions = {
+  /** When set, encrypt with SQLCipher; omit (and leave env unset) for plaintext. */
+  sqlCipherKey?: string;
+};
+
+export function createChatDatabase(
+  path: ":memory:" | string = ":memory:",
+  opts?: CreateChatDatabaseOptions,
+): DatabaseType {
+  const db = openChatSqliteDatabase(path, { create: true }, opts?.sqlCipherKey);
   ensureChatSqliteSchema(db);
   return db;
 }

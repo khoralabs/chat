@@ -13,7 +13,7 @@ Generic, use-case-agnostic messaging ledger libraries for Khora.
 |--------|----------|
 | `.` | Domain types, hashing, lineage, `createChatService` |
 | `./persistence` | Port helpers, memory fixture, signed persistence wrapper |
-| `./sqlite` | Bun `bun:sqlite` adapter (WAL, busy timeout) |
+| `./sqlite` | Bun `bun:sqlite` adapter (WAL, busy timeout; optional SQLCipher via `CHAT_SQLCIPHER_KEY`) |
 | `./turso-serverless` | Turso / local-sqlite SQL adapter |
 | `./turso-serverless/sql` | Low-level SQL helpers |
 | `./http` | ChatService-shaped HTTP/WS transport |
@@ -47,6 +47,8 @@ Opt in with `withSignedChatPersistence` from `@khoralabs/chat/persistence`. Host
 ```sh
 CHAT_INTERNAL_TOKEN=dev bun run --filter @khoralabs/chat start:http
 ```
+
+Optional at-rest encryption: set `CHAT_SQLCIPHER_KEY` (≥16 chars) to enable SQLCipher for local SQLite; omit for plaintext.
 
 ## Release
 

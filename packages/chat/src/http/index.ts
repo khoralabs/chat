@@ -6,10 +6,13 @@ export {
   type StartStreamedPostBody,
 } from "./client.ts";
 export {
+  CHAT_SQLCIPHER_ENV,
   chatHttpPort,
   chatInternalToken,
+  DEV_SQLCIPHER_KEY,
   resolveChatDataDir,
   resolveChatDbPath,
+  sqlCipherKeyFromEnv,
 } from "./config.ts";
 export {
   type AuthorizeRequest,
