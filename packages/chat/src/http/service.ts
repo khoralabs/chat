@@ -1,10 +1,3 @@
-import {
-  closeLocalSqliteDatabase,
-  createLocalSqliteDatabase,
-  createTursoChatPersistence,
-  createTursoDatabase,
-  ensureChatSchema,
-} from "@khoralabs/chat/turso-serverless";
 import type { ChatEvent, ChatPersistence } from "../domain.ts";
 import { type ChatNotFoundError, isChatNotFoundError } from "../errors.ts";
 import { type ChatService, createChatService } from "../service.ts";
@@ -69,6 +62,15 @@ export async function createChatStorage(config: ChatStorageConfig): Promise<Chat
       },
     };
   }
+
+  // Lazy: keep createChatHttpRuntime usable without optional turso/sqlcipher peers.
+  const {
+    closeLocalSqliteDatabase,
+    createLocalSqliteDatabase,
+    createTursoChatPersistence,
+    createTursoDatabase,
+    ensureChatSchema,
+  } = await import("@khoralabs/chat/turso-serverless");
 
   if (config.kind === "turso") {
     const db = createTursoDatabase({
