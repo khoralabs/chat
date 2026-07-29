@@ -1,17 +1,17 @@
 import type { UIMessage } from "ai";
+import { ChatNotFoundError } from "../errors.ts";
+import type { ChatEvent } from "../events.ts";
 import type {
   AddThreadParticipantInput,
   AppendPostInput,
-  ChatEvent,
   CreateChannelInput,
   CreateThreadInput,
   ListPostsInput,
   ListThreadsInput,
-  SignedEnvelope,
   StartStreamedPostInput,
-} from "../domain.ts";
-import { ChatNotFoundError } from "../domain.ts";
+} from "../persistence/core/persistence/types.ts";
 import type { ChatService } from "../service.ts";
+import type { SignedEnvelope } from "../types.ts";
 
 async function readJson<T>(res: Response): Promise<T> {
   const text = await res.text();

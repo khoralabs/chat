@@ -176,14 +176,20 @@ export async function buildPackage(pkgDir: string): Promise<void> {
   rmSync(distDir, { recursive: true, force: true });
   mkdirSync(distDir, { recursive: true });
 
+  // Build each export entry alone. Bun's multi-entry bundler prepends
+  // `node:module` createRequire to every chunk when any entry needs Node APIs,
+  // which breaks browser-safe subpaths like ./http/client.
   const entries = collectExportEntries(pkgDir);
-  const js =
-    await Bun.$`bun build ${entries} --outdir=dist --root=src --target=node --format=esm --packages=external`
-      .cwd(pkgDir)
-      .nothrow();
-  if (js.exitCode !== 0) {
-    console.error(js.stderr.toString() || js.stdout.toString());
-    throw new Error(`bun build failed: ${pkgDir}`);
+  for (const entry of entries) {
+    const target = entryBuildTarget(entry);
+    const js =
+      await Bun.$`bun build ${entry} --outdir=dist --root=src --target=${target} --format=esm --packages=external`
+        .cwd(pkgDir)
+        .nothrow();
+    if (js.exitCode !== 0) {
+      console.error(js.stderr.toString() || js.stdout.toString());
+      throw new Error(`bun build failed: ${pkgDir} (${entry}, target=${target})`);
+    }
   }
 
   const dts = await Bun.$`tsc -p ${tsconfigPath} --emitDeclarationOnly`.cwd(pkgDir).nothrow();
@@ -198,6 +204,13 @@ export async function buildPackage(pkgDir: string): Promise<void> {
 
   copyExportAssets(pkgDir);
   pruneTestArtifacts(distDir);
+}
+
+/** Browser-safe subpath entrypoints (must not ship node: builtins). */
+function entryBuildTarget(entry: string): "browser" | "node" {
+  const normalized = entry.replaceAll("\\", "/");
+  if (normalized.endsWith("/http/client.ts")) return "browser";
+  return "node";
 }
 
 /** Remove any *.test.* emit that slipped into dist. */
