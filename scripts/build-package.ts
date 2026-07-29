@@ -4,6 +4,7 @@
  * - types: tsc --emitDeclarationOnly
  */
 import {
+  copyFileSync,
   existsSync,
   mkdirSync,
   readdirSync,
@@ -21,6 +22,17 @@ export type ExportTarget = {
   [key: string]: unknown;
 };
 
+function isSourceScript(srcPath: string): boolean {
+  return /\.tsx?$/.test(srcPath);
+}
+
+export function srcAssetToDistPath(srcPath: string): string {
+  if (!srcPath.startsWith("./src/")) {
+    throw new Error(`expected ./src/… export path, got ${srcPath}`);
+  }
+  return srcPath.replace(/^\.\/src\//, "./dist/");
+}
+
 export function srcPathToDistPaths(srcPath: string): {
   types: string;
   import: string;
@@ -28,6 +40,9 @@ export function srcPathToDistPaths(srcPath: string): {
 } {
   if (!srcPath.startsWith("./src/")) {
     throw new Error(`expected ./src/… export path, got ${srcPath}`);
+  }
+  if (!isSourceScript(srcPath)) {
+    throw new Error(`expected ./src/….{ts,tsx} export path, got ${srcPath}`);
   }
   const withoutExt = srcPath.replace(/^\.\/src\//, "./dist/").replace(/\.tsx?$/, "");
   return {
@@ -43,7 +58,11 @@ export function toPublishedExports(
   const out: Record<string, ExportTarget | string> = {};
   for (const [key, value] of Object.entries(exportsMap)) {
     if (typeof value === "string") {
-      out[key] = value.startsWith("./src/") ? srcPathToDistPaths(value) : value;
+      if (!value.startsWith("./src/")) {
+        out[key] = value;
+        continue;
+      }
+      out[key] = isSourceScript(value) ? srcPathToDistPaths(value) : srcAssetToDistPath(value);
       continue;
     }
     const importPath =
@@ -73,13 +92,29 @@ export function collectExportEntries(pkgDir: string): string[] {
           (typeof value.default === "string" && value.default) ||
           (typeof value.types === "string" && value.types) ||
           undefined;
-    if (!src?.startsWith("./src/")) continue;
+    if (!src?.startsWith("./src/") || !isSourceScript(src)) continue;
     const abs = path.join(pkgDir, src);
     if (!existsSync(abs)) throw new Error(`export entry missing: ${src}`);
     entries.add(src);
   }
   if (entries.size === 0) throw new Error(`no ./src export entries in ${pkgDir}`);
   return [...entries];
+}
+
+/** Copy non-JS export assets (e.g. CSS) from src/ into dist/. */
+export function copyExportAssets(pkgDir: string): void {
+  const pkg = JSON.parse(readFileSync(path.join(pkgDir, "package.json"), "utf8")) as {
+    exports?: Record<string, ExportTarget | string>;
+  };
+  for (const value of Object.values(pkg.exports ?? {})) {
+    const src = typeof value === "string" ? value : undefined;
+    if (!src?.startsWith("./src/") || isSourceScript(src)) continue;
+    const from = path.join(pkgDir, src);
+    if (!existsSync(from)) throw new Error(`export asset missing: ${src}`);
+    const to = path.join(pkgDir, srcAssetToDistPath(src));
+    mkdirSync(path.dirname(to), { recursive: true });
+    copyFileSync(from, to);
+  }
 }
 
 /**
@@ -161,6 +196,7 @@ export async function buildPackage(pkgDir: string): Promise<void> {
     fixDeclarationSpecifiers(file, distDir);
   }
 
+  copyExportAssets(pkgDir);
   pruneTestArtifacts(distDir);
 }
 
