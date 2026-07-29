@@ -1,3 +1,4 @@
+import { useMessageScroller } from "@shadcn/react/message-scroller";
 import { useEffect, useRef } from "react";
 
 export type ScrollTarget = {
@@ -49,6 +50,7 @@ export function useScrollToPost(
   onComplete?: () => void,
   ready = true,
 ) {
+  const { scrollToMessage } = useMessageScroller();
   const highlightedRef = useRef<{ kind: "post" | "attachment"; id: string } | null>(null);
 
   useEffect(() => {
@@ -56,6 +58,8 @@ export function useScrollToPost(
 
     const { postId, attachmentId } = scrollTarget;
     const highlightAttachment = attachmentId !== undefined && attachmentId.length > 0;
+
+    scrollToMessage(postId, { align: "center", behavior: "smooth" });
 
     let element: HTMLElement | null = null;
     let highlightKind: "post" | "attachment";
@@ -78,9 +82,7 @@ export function useScrollToPost(
     }
 
     if (element === null) {
-      if (highlightAttachment) {
-        messageHeaderForPost(postId)?.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
+      onComplete?.();
       return;
     }
 
@@ -88,7 +90,6 @@ export function useScrollToPost(
       clearHighlight(highlightedRef.current.kind, highlightedRef.current.id);
     }
 
-    element.scrollIntoView({ behavior: "smooth", block: "center" });
     if (highlightKind === "post") {
       element.focus({ preventScroll: true });
       animateMessageHeader(element);
@@ -106,5 +107,5 @@ export function useScrollToPost(
     }, highlightDuration);
 
     return () => window.clearTimeout(timeout);
-  }, [ready, scrollTarget, onComplete]);
+  }, [ready, scrollTarget, onComplete, scrollToMessage]);
 }

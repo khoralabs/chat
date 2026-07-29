@@ -1,35 +1,69 @@
 "use client";
 
+import {
+  MessageScroller,
+  useMessageScroller,
+  useMessageScrollerScrollable,
+  useMessageScrollerVisibility,
+} from "@shadcn/react/message-scroller";
 import type { UIMessage } from "ai";
 import { ArrowDownIcon, DownloadIcon } from "lucide-react";
-import type { ComponentProps } from "react";
-import { useCallback } from "react";
-import { StickToBottom, useStickToBottomContext } from "use-stick-to-bottom";
+import { type ComponentProps, createContext, type ReactNode, useCallback, useContext } from "react";
 import { Button } from "#components/ui/button";
 import { cn } from "#lib/utils";
 
-export type ConversationProps = ComponentProps<typeof StickToBottom>;
+const ConversationProviderScopeContext = createContext(false);
+
+export function useConversationProviderScope(): boolean {
+  return useContext(ConversationProviderScopeContext);
+}
+
+export type ConversationProviderProps = ComponentProps<typeof MessageScroller.Provider>;
+
+export const ConversationProvider = ({
+  autoScroll = true,
+  defaultScrollPosition = "end",
+  children,
+  ...props
+}: ConversationProviderProps) => (
+  <ConversationProviderScopeContext.Provider value={true}>
+    <MessageScroller.Provider
+      autoScroll={autoScroll}
+      defaultScrollPosition={defaultScrollPosition}
+      {...props}
+    >
+      {children}
+    </MessageScroller.Provider>
+  </ConversationProviderScopeContext.Provider>
+);
+
+export type ConversationProps = ComponentProps<typeof MessageScroller.Root>;
 
 export const Conversation = ({ className, ...props }: ConversationProps) => (
-  <StickToBottom
-    className={cn("relative min-h-0 flex-1 scroll-fade overflow-y-auto", className)}
-    initial="smooth"
-    resize="smooth"
-    role="log"
+  <MessageScroller.Root
+    className={cn("relative flex min-h-0 flex-1 flex-col overflow-hidden", className)}
     {...props}
   />
 );
 
-export type ConversationContentProps = ComponentProps<typeof StickToBottom.Content>;
+export type ConversationContentProps = ComponentProps<typeof MessageScroller.Content>;
 
 export const ConversationContent = ({ className, ...props }: ConversationContentProps) => (
-  <StickToBottom.Content className={cn("flex flex-col gap-8 p-4", className)} {...props} />
+  <MessageScroller.Viewport className="min-h-0 flex-1 scroll-fade overflow-y-auto">
+    <MessageScroller.Content className={cn("flex flex-col gap-8 p-4", className)} {...props} />
+  </MessageScroller.Viewport>
+);
+
+export type ConversationItemProps = ComponentProps<typeof MessageScroller.Item>;
+
+export const ConversationItem = ({ className, ...props }: ConversationItemProps) => (
+  <MessageScroller.Item className={cn(className)} {...props} />
 );
 
 export type ConversationEmptyStateProps = ComponentProps<"div"> & {
   title?: string;
   description?: string;
-  icon?: React.ReactNode;
+  icon?: ReactNode;
 };
 
 export const ConversationEmptyState = ({
@@ -59,36 +93,24 @@ export const ConversationEmptyState = ({
   </div>
 );
 
-export type ConversationScrollButtonProps = ComponentProps<typeof Button>;
+export type ConversationScrollButtonProps = ComponentProps<typeof MessageScroller.Button>;
 
 export const ConversationScrollButton = ({
   className,
+  children,
   ...props
-}: ConversationScrollButtonProps) => {
-  const { isAtBottom, scrollToBottom } = useStickToBottomContext();
-
-  const handleScrollToBottom = useCallback(() => {
-    scrollToBottom();
-  }, [scrollToBottom]);
-
-  return (
-    !isAtBottom && (
-      <Button
-        className={cn(
-          "absolute bottom-4 left-[50%] translate-x-[-50%] rounded-full dark:bg-background dark:hover:bg-muted",
-          className,
-        )}
-        onClick={handleScrollToBottom}
-        size="icon"
-        type="button"
-        variant="outline"
-        {...props}
-      >
-        <ArrowDownIcon className="size-4" />
-      </Button>
-    )
-  );
-};
+}: ConversationScrollButtonProps) => (
+  <MessageScroller.Button
+    className={cn(
+      "absolute bottom-4 left-[50%] z-10 flex size-10 translate-x-[-50%] items-center justify-center rounded-full border bg-background shadow-sm dark:bg-background dark:hover:bg-muted data-[active=false]:pointer-events-none data-[active=false]:opacity-0",
+      className,
+    )}
+    type="button"
+    {...props}
+  >
+    {children ?? <ArrowDownIcon className="size-4" />}
+  </MessageScroller.Button>
+);
 
 const getMessageText = (message: UIMessage): string =>
   message.parts
@@ -149,3 +171,5 @@ export const ConversationDownload = ({
     </Button>
   );
 };
+
+export { useMessageScroller, useMessageScrollerScrollable, useMessageScrollerVisibility };

@@ -5,10 +5,23 @@ import type { ReactNode, RefObject } from "react";
 import { cn } from "#lib/utils";
 import type { DisplayMessage } from "../adapters.ts";
 import { showAgentLoading } from "../hooks/use-agent-loading.ts";
+import { type ScrollTarget, useScrollToPost } from "../hooks/use-scroll-to-post.ts";
+import { ConversationProvider } from "./ai-elements/conversation.tsx";
 import type { ChatAuthor } from "./author-avatar.tsx";
 import { ChatDropOverlay } from "./drop-overlay.tsx";
 import { PostMessages } from "./post-messages.tsx";
 import { PromptComposer, type PromptInputMessage } from "./prompt-composer.tsx";
+
+function ChatThreadScrollTarget({
+  scrollTarget,
+  onScrollTargetComplete,
+}: {
+  scrollTarget?: ScrollTarget | null;
+  onScrollTargetComplete?: () => void;
+}) {
+  useScrollToPost(scrollTarget, onScrollTargetComplete, true);
+  return null;
+}
 
 export function ChatThreadView({
   messages,
@@ -24,6 +37,8 @@ export function ChatThreadView({
   placeholder,
   chatRootRef,
   isDragActive = false,
+  scrollTarget,
+  onScrollTargetComplete,
   onAttachmentControlsReady,
   onSubmit,
   onStop,
@@ -46,6 +61,8 @@ export function ChatThreadView({
   placeholder: string;
   chatRootRef?: RefObject<HTMLDivElement | null>;
   isDragActive?: boolean;
+  scrollTarget?: ScrollTarget | null;
+  onScrollTargetComplete?: () => void;
   onAttachmentControlsReady: (controls: {
     add: (files: File[] | FileList) => void;
     clear: () => void;
@@ -61,43 +78,49 @@ export function ChatThreadView({
   const agentLoading = showAgentLoadingProp ?? showAgentLoading(awaitingOpening, messages, status);
 
   return (
-    <div
-      className={cn(
-        "relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden",
-        isDragActive && "select-none",
-      )}
-      ref={chatRootRef}
-    >
-      <ChatThreadDropOverlay active={isDragActive} />
-      <ChatThreadMessages
-        agentAuthor={agentAuthor}
-        awaitingOpening={awaitingOpening}
-        messages={messages}
-        showAgentLoading={agentLoading}
-        status={status}
+    <ConversationProvider>
+      <div
+        className={cn(
+          "relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden",
+          isDragActive && "select-none",
+        )}
+        ref={chatRootRef}
       >
-        {messagesChildren}
-      </ChatThreadMessages>
-      {canWrite ? (
-        <ChatThreadComposer
-          chatError={chatError}
-          connected={connected}
-          input={input}
-          onAttachmentControlsReady={onAttachmentControlsReady}
-          onError={onError}
-          onStop={onStop}
-          onSubmit={onSubmit}
-          onTextChange={onTextChange}
-          placeholder={placeholder}
+        <ChatThreadScrollTarget
+          onScrollTargetComplete={onScrollTargetComplete}
+          scrollTarget={scrollTarget}
+        />
+        <ChatThreadDropOverlay active={isDragActive} />
+        <ChatThreadMessages
+          agentAuthor={agentAuthor}
+          awaitingOpening={awaitingOpening}
+          messages={messages}
+          showAgentLoading={agentLoading}
           status={status}
-          header={composerHeader}
         >
-          {composerChildren}
-        </ChatThreadComposer>
-      ) : (
-        <ChatThreadReadOnly message={readOnlyMessage} />
-      )}
-    </div>
+          {messagesChildren}
+        </ChatThreadMessages>
+        {canWrite ? (
+          <ChatThreadComposer
+            chatError={chatError}
+            connected={connected}
+            input={input}
+            onAttachmentControlsReady={onAttachmentControlsReady}
+            onError={onError}
+            onStop={onStop}
+            onSubmit={onSubmit}
+            onTextChange={onTextChange}
+            placeholder={placeholder}
+            status={status}
+            header={composerHeader}
+          >
+            {composerChildren}
+          </ChatThreadComposer>
+        ) : (
+          <ChatThreadReadOnly message={readOnlyMessage} />
+        )}
+      </div>
+    </ConversationProvider>
   );
 }
 
@@ -127,6 +150,7 @@ export function ChatThreadMessages({
       messages={messages}
       showAgentLoading={showAgentLoading}
       status={status}
+      withProvider={false}
     >
       {children}
     </PostMessages>

@@ -1,16 +1,18 @@
 "use client";
 
 import type { ChatStatus } from "ai";
-import { createContext, type ReactNode, useContext, useMemo, useRef } from "react";
+import { createContext, type ReactNode, useContext, useMemo } from "react";
 import type { DisplayMessage, DisplayToolCall } from "../adapters.ts";
 import { formatPostTimestamp } from "../adapters.ts";
 import { showAgentLoading } from "../hooks/use-agent-loading.ts";
-import { scrollAnchorPostId, useThreadScrollPad } from "../hooks/use-thread-scroll-pad.ts";
 import { Attachment, AttachmentPreview } from "./ai-elements/attachments.tsx";
 import {
   Conversation,
   ConversationContent,
+  ConversationItem,
+  ConversationProvider,
   ConversationScrollButton,
+  useConversationProviderScope,
 } from "./ai-elements/conversation.tsx";
 import {
   Message,
@@ -55,6 +57,15 @@ function usePostMessageContext() {
   return context;
 }
 
+function PostMessagesShell({ className, children }: { className?: string; children?: ReactNode }) {
+  return (
+    <Conversation className={className ?? "flex-1"}>
+      <ConversationContent className={chatColumnClassName}>{children}</ConversationContent>
+      <ConversationScrollButton />
+    </Conversation>
+  );
+}
+
 export function PostMessages({
   messages,
   status,
@@ -62,6 +73,7 @@ export function PostMessages({
   showAgentLoading: showAgentLoadingProp,
   loadingAuthor = null,
   className,
+  withProvider = true,
   children,
 }: {
   messages: DisplayMessage[];
@@ -70,6 +82,7 @@ export function PostMessages({
   showAgentLoading?: boolean;
   loadingAuthor?: ChatAuthor | null;
   className?: string;
+  withProvider?: boolean;
   children?: ReactNode;
 }) {
   const showLoading = showAgentLoadingProp ?? showAgentLoading(awaitingOpening, messages, status);
@@ -77,25 +90,26 @@ export function PostMessages({
     () => ({ messages, status, showAgentLoading: showLoading, loadingAuthor }),
     [messages, status, showLoading, loadingAuthor],
   );
+  const inProviderScope = useConversationProviderScope();
+  const shouldProvide = withProvider && !inProviderScope;
 
-  return (
+  const body = (
     <PostMessagesContext.Provider value={value}>
-      <Conversation className={className ?? "flex-1"}>
-        <ConversationContent className={chatColumnClassName}>
-          {children ?? (
-            <>
-              {messages.map((message) => (
-                <PostMessage key={message.id} message={message} />
-              ))}
-              <PostMessagesLoading />
-              <PostMessagesScrollPad />
-            </>
-          )}
-        </ConversationContent>
-        <ConversationScrollButton />
-      </Conversation>
+      <PostMessagesShell className={className}>
+        {children ?? (
+          <>
+            {messages.map((message) => (
+              <PostMessage key={message.id} message={message} />
+            ))}
+            <PostMessagesLoading />
+          </>
+        )}
+      </PostMessagesShell>
     </PostMessagesContext.Provider>
   );
+
+  if (!shouldProvide) return body;
+  return <ConversationProvider>{body}</ConversationProvider>;
 }
 
 export function PostMessage({
@@ -109,16 +123,18 @@ export function PostMessage({
 
   return (
     <PostMessageContext.Provider value={value}>
-      <Message data-post-id={message.id} data-message-id={message.id} from={message.role}>
-        {children ?? (
-          <>
-            <PostMessageHeader />
-            <PostMessageAttachments />
-            <PostMessageContent />
-            <PostMessageTimestamp />
-          </>
-        )}
-      </Message>
+      <ConversationItem messageId={message.id} scrollAnchor={message.role === "user"}>
+        <Message data-post-id={message.id} data-message-id={message.id} from={message.role}>
+          {children ?? (
+            <>
+              <PostMessageHeader />
+              <PostMessageAttachments />
+              <PostMessageContent />
+              <PostMessageTimestamp />
+            </>
+          )}
+        </Message>
+      </ConversationItem>
     </PostMessageContext.Provider>
   );
 }
@@ -220,12 +236,14 @@ export function PostMessagesEmpty({
   if (messages.length > 0) return null;
   if (children !== undefined) return <>{children}</>;
   return (
-    <div className="flex size-full flex-col items-center justify-center gap-3 p-8 text-center">
-      <div className="space-y-1">
-        <h3 className="text-sm font-medium">{title}</h3>
-        <p className="text-sm text-muted-foreground">{description}</p>
+    <ConversationItem messageId="__empty" scrollAnchor={false}>
+      <div className="flex size-full flex-col items-center justify-center gap-3 p-8 text-center">
+        <div className="space-y-1">
+          <h3 className="text-sm font-medium">{title}</h3>
+          <p className="text-sm text-muted-foreground">{description}</p>
+        </div>
       </div>
-    </div>
+    </ConversationItem>
   );
 }
 
@@ -234,26 +252,11 @@ export function PostMessagesLoading({ children }: { children?: ReactNode }) {
   if (!showAgentLoading) return null;
   if (children !== undefined) return <>{children}</>;
   return (
-    <Message data-agent-loading from="assistant">
-      <MessageHeader author={loadingAuthor} from="assistant" shimmer />
-    </Message>
-  );
-}
-
-export function PostMessagesScrollPad() {
-  const { messages, status, showAgentLoading } = usePostMessagesContext();
-  const padRef = useRef<HTMLDivElement>(null);
-  const anchorPostId = scrollAnchorPostId(messages, status);
-  useThreadScrollPad(anchorPostId, showAgentLoading, padRef);
-
-  return (
-    <div
-      ref={padRef}
-      aria-hidden
-      className="pointer-events-none shrink-0"
-      data-chat-scroll-pad
-      style={{ height: 0 }}
-    />
+    <ConversationItem messageId="__agent-loading" scrollAnchor={false}>
+      <Message data-agent-loading from="assistant">
+        <MessageHeader author={loadingAuthor} from="assistant" shimmer />
+      </Message>
+    </ConversationItem>
   );
 }
 

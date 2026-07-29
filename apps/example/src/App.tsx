@@ -12,7 +12,6 @@ import {
   useChannel,
   useChatDragDrop,
   usePostComposer,
-  useScrollToPost,
   useThreadPosts,
   useThreads,
 } from "@khoralabs/chat-react";
@@ -38,7 +37,6 @@ import {
   PostMessages,
   PostMessagesEmpty,
   PostMessagesLoading,
-  PostMessagesScrollPad,
   PostMessageTimestamp,
   PromptComposer,
   type PromptInputMessage,
@@ -265,7 +263,6 @@ function LiveChat({ threadId }: { threadId: string }) {
   const dragDrop = useChatDragDrop(true);
   const messages = useMemo(() => postsToDisplayMessages(posts, { resolveAuthor }), [posts]);
   const loading = useAgentLoadingIndicator({ status, messages });
-  useScrollToPost(scrollTarget, () => setScrollTarget(null), true);
 
   const submit = async (message: PromptInputMessage) => {
     const text = message.text.trim();
@@ -289,8 +286,9 @@ function LiveChat({ threadId }: { threadId: string }) {
         <h2 className="text-xl font-semibold">Live SQLite tool-loop chat</h2>
         <p className="text-sm text-muted-foreground">
           Messages persist in <code>packages/example/sqlite</code>. The agent streams a tool call
-          and stores facts in a separate SQLite table. The message list uses{" "}
-          <code className="rounded bg-muted px-1">scroll-fade</code> when content overflows.
+          and stores facts in a separate SQLite table. Scroll uses{" "}
+          <code className="rounded bg-muted px-1">MessageScroller</code> with{" "}
+          <code className="rounded bg-muted px-1">scroll-fade</code>.
         </p>
       </div>
       <ChatThreadView
@@ -305,14 +303,16 @@ function LiveChat({ threadId }: { threadId: string }) {
         messages={messages}
         onAttachmentControlsReady={dragDrop.handleAttachmentControlsReady}
         onError={setChatError}
+        onScrollTargetComplete={() => setScrollTarget(null)}
         onStop={() => setStatus("ready")}
         onSubmit={submit}
         onTextChange={(event) => setInput(event.currentTarget.value)}
         placeholder="Ask something, or type: remember project = khora"
+        scrollTarget={scrollTarget}
         showAgentLoading={loading}
         status={status}
       />
-      <div className="border-t p-3">
+      <div className="flex flex-wrap gap-2 border-t p-3">
         <button
           className="rounded-md border px-3 py-2 text-sm hover:bg-accent"
           type="button"
@@ -321,7 +321,17 @@ function LiveChat({ threadId }: { threadId: string }) {
             if (last) setScrollTarget({ postId: last.id });
           }}
         >
-          useScrollToPost: jump to latest
+          scrollToMessage: jump to latest
+        </button>
+        <button
+          className="rounded-md border px-3 py-2 text-sm hover:bg-accent"
+          type="button"
+          onClick={() => {
+            const first = messages.at(0);
+            if (first) setScrollTarget({ postId: first.id });
+          }}
+        >
+          scrollToMessage: jump to first
         </button>
       </div>
     </section>
@@ -355,7 +365,6 @@ function ComponentCatalog() {
               </PostMessage>
             ))}
             <PostMessagesLoading />
-            <PostMessagesScrollPad />
           </PostMessages>
         </div>
       </section>

@@ -32,7 +32,11 @@ export {
 export { showAgentLoading, useAgentLoadingIndicator } from "./hooks/use-agent-loading.ts";
 export { useChatDragDrop } from "./hooks/use-chat-drag-drop.ts";
 export { type ScrollTarget, useScrollToPost } from "./hooks/use-scroll-to-post.ts";
-export { scrollAnchorPostId, useThreadScrollPad } from "./hooks/use-thread-scroll-pad.ts";
+export {
+  useMessageScroller,
+  useMessageScrollerScrollable,
+  useMessageScrollerVisibility,
+} from "./ui/ai-elements/conversation.tsx";
 
 type ChatContextValue = {
   client: ChatClient;
