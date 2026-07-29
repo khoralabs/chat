@@ -19,6 +19,8 @@ export {
   extractToolCallsFromParts,
   formatPostTimestamp,
   guessAttachmentMimeType,
+  mapDocumentMetadata,
+  mapSourceMetadata,
   toolStateForDisplay,
 } from "./adapters.ts";
 export type { ChatClient } from "./client.ts";

@@ -34,8 +34,9 @@
     },
     "packages/chat": {
       "name": "@khoralabs/chat",
-      "version": "0.1.2",
+      "version": "0.1.6",
       "dependencies": {
+        "@khoralabs/sourcemaps": "^0.1.0",
         "ai": "^7.0.9",
       },
       "devDependencies": {
@@ -56,7 +57,7 @@
     },
     "packages/chat-react": {
       "name": "@khoralabs/chat-react",
-      "version": "0.1.2",
+      "version": "0.1.6",
       "dependencies": {
         "@khoralabs/chat": "workspace:*",
         "@radix-ui/react-slot": "^1.2.3",
@@ -215,6 +216,8 @@
     "@khoralabs/chat-example": ["@khoralabs/chat-example@workspace:apps/example"],
 
     "@khoralabs/chat-react": ["@khoralabs/chat-react@workspace:packages/chat-react"],
+
+    "@khoralabs/sourcemaps": ["@khoralabs/sourcemaps@0.1.0", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-9eXXrtxYeOCGpKdcEWoGtLVzHfi3zF+6s//LPv4SFWoy9tJtGu1hLdW9gGFhtbRfTHDxMb1/RHblk7NREqQdwQ=="],
 
     "@khoralabs/sqlite-crypto": ["@khoralabs/sqlite-crypto@0.1.0", "", {}, "sha512-HTpnQtwaPQDD0J5fwk9w8o47cs1HrhTBYEL5SKUlEMuvUdcqC/JgEZzwMqeT7wIZQLPdrBuPoHJMyrAkyVJGDw=="],
 

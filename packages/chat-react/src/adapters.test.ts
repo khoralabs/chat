@@ -99,6 +99,57 @@ describe("adapters", () => {
     expect(guessAttachmentMimeType("notes.md")).toBe("text/markdown");
   });
 
+  test("postToDisplayMessage maps metadata.sources to source attachments", () => {
+    const message = postToDisplayMessage(
+      basePost({
+        role: "assistant",
+        parts: [{ type: "text", text: "Cited." }],
+        author: { type: "agent", id: "agent-1" },
+        metadata: {
+          sources: [
+            {
+              id: "src-1",
+              title: "Spec",
+              mediaType: "text/markdown",
+              sourceRef: {
+                domain: "document",
+                document_id: "doc-1",
+                content_hash: "a".repeat(64),
+              },
+            },
+          ],
+        },
+      }),
+    );
+
+    expect(message?.attachments).toHaveLength(1);
+    expect(message?.attachments?.[0]?.kind).toBe("source");
+    expect(message?.attachments?.[0]?.title).toBe("Spec");
+    expect(message?.attachments?.[0]?.sourceRef).toMatchObject({ document_id: "doc-1" });
+  });
+
+  test("postToDisplayMessage keeps source-only messages", () => {
+    const message = postToDisplayMessage(
+      basePost({
+        role: "assistant",
+        parts: [],
+        author: { type: "agent", id: "agent-1" },
+        metadata: {
+          sources: [
+            {
+              id: "src-1",
+              sourceRef: { bucket: "docs", key: "a.md" },
+            },
+          ],
+        },
+      }),
+    );
+
+    expect(message).not.toBeNull();
+    expect(message?.content).toBe("");
+    expect(message?.attachments).toHaveLength(1);
+  });
+
   test("toolStateForDisplay maps ai sdk states", () => {
     expect(toolStateForDisplay("output-available")).toBe("completed");
     expect(toolStateForDisplay("output-error")).toBe("error");

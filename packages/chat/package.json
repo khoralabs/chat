@@ -82,6 +82,7 @@
     }
   },
   "dependencies": {
+    "@khoralabs/sourcemaps": "^0.1.0",
     "ai": "^7.0.9"
   },
   "peerDependencies": {

@@ -1,4 +1,5 @@
-import type { Post, ScopeRef } from "@khoralabs/chat";
+import type { ChatDocumentWire, ChatSourceWire, Post, ScopeRef } from "@khoralabs/chat";
+import { getMessageSources } from "@khoralabs/chat";
 import type { UIMessage } from "ai";
 import type { ChatAuthor } from "./ui/author-avatar.tsx";
 
@@ -8,6 +9,10 @@ export type DisplayAttachment = {
   mediaType?: string;
   byteSize?: number;
   url?: string;
+  /** Host-attached sourcemap citation (vs uploaded file). */
+  kind?: "file" | "source";
+  title?: string;
+  sourceRef?: ChatSourceWire["sourceRef"];
 };
 
 export type DisplayToolCall = {
@@ -78,20 +83,24 @@ export function extractToolCallsFromParts(parts: UIMessage["parts"]): DisplayToo
   return toolCalls;
 }
 
-type MessageDocumentWire = {
-  id: string;
-  fileName: string;
-  mimeType?: string;
-  mediaType?: string;
-  byteSize?: number;
-};
-
-export function mapDocumentMetadata(document: MessageDocumentWire): DisplayAttachment {
+export function mapDocumentMetadata(document: ChatDocumentWire): DisplayAttachment {
   return {
     id: document.id,
     fileName: document.fileName,
     mediaType: document.mimeType ?? document.mediaType,
     byteSize: document.byteSize,
+    kind: "file",
+  };
+}
+
+export function mapSourceMetadata(source: ChatSourceWire): DisplayAttachment {
+  return {
+    id: source.id,
+    fileName: source.title ?? source.id,
+    title: source.title,
+    mediaType: source.mediaType,
+    kind: "source",
+    sourceRef: source.sourceRef,
   };
 }
 
@@ -128,6 +137,16 @@ function defaultAuthor(author: ScopeRef): ChatAuthor {
   return { name: author.id };
 }
 
+function withResolvedUrl(
+  attachment: DisplayAttachment,
+  resolveUrl?: PostToDisplayOptions["resolveAttachmentUrl"],
+): DisplayAttachment {
+  return {
+    ...attachment,
+    url: resolveUrl?.(attachment) ?? attachment.url,
+  };
+}
+
 export function postToDisplayMessage(
   post: Post,
   options: PostToDisplayOptions = {},
@@ -138,7 +157,7 @@ export function postToDisplayMessage(
     | {
         kickoff?: boolean;
         displayText?: string;
-        documents?: MessageDocumentWire[];
+        documents?: ChatDocumentWire[];
       }
     | undefined;
   if (metadata?.kickoff === true) return null;
@@ -147,13 +166,18 @@ export function postToDisplayMessage(
     typeof metadata?.displayText === "string"
       ? metadata.displayText
       : extractTextFromParts(post.parts);
-  const attachments = metadata?.documents?.map((document) => {
-    const attachment = mapDocumentMetadata(document);
-    return {
-      ...attachment,
-      url: options.resolveAttachmentUrl?.(attachment),
-    };
-  });
+
+  const documentAttachments = (metadata?.documents ?? []).map((document) =>
+    withResolvedUrl(mapDocumentMetadata(document), options.resolveAttachmentUrl),
+  );
+  const sourceAttachments = getMessageSources(post.metadata).map((source) =>
+    withResolvedUrl(mapSourceMetadata(source), options.resolveAttachmentUrl),
+  );
+  const attachments =
+    documentAttachments.length > 0 || sourceAttachments.length > 0
+      ? [...documentAttachments, ...sourceAttachments]
+      : undefined;
+
   const toolCalls = extractToolCallsFromParts(post.parts);
 
   if (

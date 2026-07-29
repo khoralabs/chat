@@ -16,6 +16,17 @@ export function toAttachmentData(
   attachment: DisplayAttachment,
   resolveUrl?: (attachment: DisplayAttachment) => string | undefined,
 ): AttachmentData {
+  if (attachment.kind === "source") {
+    return {
+      type: "source-document",
+      id: attachment.id,
+      sourceId: attachment.id,
+      title: attachment.title ?? attachment.fileName,
+      filename: attachment.fileName,
+      mediaType: attachment.mediaType ?? "application/octet-stream",
+    };
+  }
+
   return {
     type: "file",
     id: attachment.id,

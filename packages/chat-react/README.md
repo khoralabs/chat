@@ -9,3 +9,5 @@ import "@khoralabs/chat-react/styles/globals.css";
 ```
 
 Peers: `react`, `react-dom` (^18 || ^19).
+
+`postToDisplayMessage` maps host-written `metadata.sources` (`ChatSourceWire`) to source attachments. Resolving originals is the host's job via their `@khoralabs/sourcemaps` `Store`.
