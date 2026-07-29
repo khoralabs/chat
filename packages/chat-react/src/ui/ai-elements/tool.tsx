@@ -144,7 +144,7 @@ export const ToolOutput = ({ className, output, errorText, ...props }: ToolOutpu
       </h4>
       <div
         className={cn(
-          "overflow-x-auto rounded-md text-xs [&_table]:w-full",
+          "scroll-fade-x overflow-x-auto rounded-md text-xs [&_table]:w-full",
           errorText ? "bg-destructive/10 text-destructive" : "bg-muted/50 text-foreground",
         )}
       >

@@ -97,7 +97,39 @@ const mockMessages: DisplayMessage[] = [
       },
     ],
   },
+  {
+    id: "catalog-user-2",
+    role: "user",
+    content: "Scroll this list — Conversation uses scroll-fade on overflow.",
+    createdAtMs: Date.now() - 45_000,
+    author: userAuthor,
+  },
+  {
+    id: "catalog-agent-2",
+    role: "assistant",
+    content:
+      "At rest the bottom edge fades. Mid-scroll both edges fade. At the end the bottom sharpens.",
+    createdAtMs: Date.now() - 30_000,
+    author: agentAuthor,
+  },
+  {
+    id: "catalog-user-3",
+    role: "user",
+    content: "Keep going so the viewport overflows.",
+    createdAtMs: Date.now() - 20_000,
+    author: userAuthor,
+  },
+  {
+    id: "catalog-agent-3",
+    role: "assistant",
+    content:
+      "Extra turns fill the column so you can feel the mask dissolve content at the edges—no overlay, no scroll listeners.",
+    createdAtMs: Date.now() - 10_000,
+    author: agentAuthor,
+  },
 ];
+
+const wideCodeSample = `const scrollFadeDemo = { conversation: "scroll-fade", codeBlock: "scroll-fade-x", toolOutput: "scroll-fade-x", note: "wide lines overflow horizontally" };`;
 
 function resolveAuthor(author: { type: string; id: string }) {
   if (author.type === "agent") return agentAuthor;
@@ -257,7 +289,8 @@ function LiveChat({ threadId }: { threadId: string }) {
         <h2 className="text-xl font-semibold">Live SQLite tool-loop chat</h2>
         <p className="text-sm text-muted-foreground">
           Messages persist in <code>packages/example/sqlite</code>. The agent streams a tool call
-          and stores facts in a separate SQLite table.
+          and stores facts in a separate SQLite table. The message list uses{" "}
+          <code className="rounded bg-muted px-1">scroll-fade</code> when content overflows.
         </p>
       </div>
       <ChatThreadView
@@ -299,9 +332,13 @@ function ComponentCatalog() {
   return (
     <aside className="space-y-6">
       <section className="rounded-xl border bg-card p-4">
-        <h2 className="mb-3 text-xl font-semibold">Static component catalog</h2>
+        <h2 className="mb-1 text-xl font-semibold">Static component catalog</h2>
+        <p className="mb-3 text-sm text-muted-foreground">
+          Scroll the thread — <code className="rounded bg-muted px-1">scroll-fade</code> on
+          Conversation.
+        </p>
         <div className="h-[360px] overflow-hidden rounded-lg border">
-          <PostMessages loadingAuthor={agentAuthor} messages={mockMessages} status="submitted">
+          <PostMessages loadingAuthor={agentAuthor} messages={mockMessages} status="ready">
             <PostMessagesEmpty />
             {mockMessages.map((message) => (
               <PostMessage key={message.id} message={message}>
@@ -365,11 +402,44 @@ function ComponentCatalog() {
             />
             <ToolContent>
               <ToolInput input={{ static: true }} />
-              <ToolOutput errorText={undefined} output={{ ok: true }} />
+              <ToolOutput
+                errorText={undefined}
+                output={
+                  <table className="min-w-[640px] border-collapse text-left">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="p-2">Component</th>
+                        <th className="p-2">Class</th>
+                        <th className="p-2">Axis</th>
+                        <th className="p-2">Notes</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="border-b">
+                        <td className="p-2">Conversation</td>
+                        <td className="p-2">scroll-fade</td>
+                        <td className="p-2">y</td>
+                        <td className="p-2">message list overflow</td>
+                      </tr>
+                      <tr>
+                        <td className="p-2">CodeBlock / ToolOutput</td>
+                        <td className="p-2">scroll-fade-x</td>
+                        <td className="p-2">x</td>
+                        <td className="p-2">wide lines and tables</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                }
+              />
             </ToolContent>
           </Tool>
 
-          <CodeBlock code={`const demo = "chat-react";`} language="ts" />
+          <div>
+            <p className="mb-2 text-xs text-muted-foreground">
+              CodeBlock <code className="rounded bg-muted px-1">scroll-fade-x</code>
+            </p>
+            <CodeBlock code={wideCodeSample} language="ts" />
+          </div>
           <p className="text-sm text-muted-foreground">
             <Shimmer as="span">Shimmer loading text</Shimmer>
           </p>

@@ -399,7 +399,7 @@ export const CodeBlockContent = ({
   const tokenized = asyncTokens ?? syncTokens;
 
   return (
-    <div className="relative overflow-auto">
+    <div className="relative scroll-fade-x overflow-auto">
       <CodeBlockBody showLineNumbers={showLineNumbers} tokenized={tokenized} />
     </div>
   );
