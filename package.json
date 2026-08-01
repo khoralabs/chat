@@ -13,6 +13,7 @@
     "test": "bun test",
     "prepare": "husky",
     "build": "bun run scripts/build-packages.ts",
+    "verify": "bun run format:check && bun run typecheck && bun run test && bun run build",
     "release:bump": "bun run scripts/bump-versions.ts",
     "release:refresh-lockfile": "bun run scripts/refresh-workspace-lockfile.ts",
     "release:verify-pack": "bun run scripts/verify-packed-workspace-deps.ts",
@@ -30,5 +31,8 @@
   "workspaces": [
     "packages/*",
     "apps/*"
-  ]
+  ],
+  "overrides": {
+    "shiki": "4.3.1"
+  }
 }
