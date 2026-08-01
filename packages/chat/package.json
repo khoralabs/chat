@@ -1,6 +1,6 @@
 {
   "name": "@khoralabs/chat",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Signed chat ledger: service, persistence backends, and HTTP transport",
   "license": "MIT",
   "type": "module",
