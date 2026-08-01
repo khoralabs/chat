@@ -1,11 +1,20 @@
 "use client";
 
-import type { ChatStatus } from "ai";
+import type { ChatStatus, ToolUIPart, UIMessage } from "ai";
+import { CheckIcon, XIcon } from "lucide-react";
 import { createContext, type ReactNode, useContext, useMemo } from "react";
-import type { DisplayMessage, DisplayToolCall } from "../adapters.ts";
+import type { DisplayMessage } from "../adapters.ts";
 import { formatPostTimestamp } from "../adapters.ts";
 import { showAgentLoading } from "../hooks/use-agent-loading.ts";
 import { Attachment, AttachmentPreview } from "./ai-elements/attachments.tsx";
+import {
+  Confirmation,
+  ConfirmationAccepted,
+  ConfirmationAction,
+  ConfirmationActions,
+  ConfirmationRejected,
+  ConfirmationRequest,
+} from "./ai-elements/confirmation.tsx";
 import {
   Conversation,
   ConversationContent,
@@ -21,16 +30,25 @@ import {
   MessageResponse,
   MessageTimestamp,
 } from "./ai-elements/message.tsx";
+import { Reasoning, ReasoningContent, ReasoningTrigger } from "./ai-elements/reasoning.tsx";
 import { Tool, ToolContent, ToolHeader, ToolInput, ToolOutput } from "./ai-elements/tool.tsx";
 import { MessageAttachments } from "./attachments-bridge.tsx";
 import type { ChatAuthor } from "./author-avatar.tsx";
 import { chatColumnClassName } from "./layout.ts";
+
+export type ToolApprovalResponse = {
+  messageId: string;
+  toolCallId: string;
+  approvalId: string;
+  approved: boolean;
+};
 
 type PostMessagesContextValue = {
   messages: DisplayMessage[];
   status: ChatStatus;
   showAgentLoading: boolean;
   loadingAuthor: ChatAuthor | null;
+  onToolApprovalResponse?: (response: ToolApprovalResponse) => void;
 };
 
 const PostMessagesContext = createContext<PostMessagesContextValue | null>(null);
@@ -72,6 +90,7 @@ export function PostMessages({
   awaitingOpening = false,
   showAgentLoading: showAgentLoadingProp,
   loadingAuthor = null,
+  onToolApprovalResponse,
   className,
   withProvider = true,
   children,
@@ -81,14 +100,21 @@ export function PostMessages({
   awaitingOpening?: boolean;
   showAgentLoading?: boolean;
   loadingAuthor?: ChatAuthor | null;
+  onToolApprovalResponse?: (response: ToolApprovalResponse) => void;
   className?: string;
   withProvider?: boolean;
   children?: ReactNode;
 }) {
   const showLoading = showAgentLoadingProp ?? showAgentLoading(awaitingOpening, messages, status);
   const value = useMemo(
-    () => ({ messages, status, showAgentLoading: showLoading, loadingAuthor }),
-    [messages, status, showLoading, loadingAuthor],
+    () => ({
+      messages,
+      status,
+      showAgentLoading: showLoading,
+      loadingAuthor,
+      onToolApprovalResponse,
+    }),
+    [messages, status, showLoading, loadingAuthor, onToolApprovalResponse],
   );
   const inProviderScope = useConversationProviderScope();
   const shouldProvide = withProvider && !inProviderScope;
@@ -174,35 +200,151 @@ export function PostMessageAttachments({ children }: { children?: ReactNode }) {
   );
 }
 
-export function PostMessageTools({ children }: { children?: ReactNode }) {
-  const { message } = usePostMessageContext();
-  if ((message.toolCalls?.length ?? 0) === 0) return null;
-  if (children !== undefined) return <>{children}</>;
+function isToolPart(part: UIMessage["parts"][number]): part is ToolUIPart {
+  return typeof part.type === "string" && part.type.startsWith("tool-");
+}
+
+function DefaultToolPart({ part, messageId }: { part: ToolUIPart; messageId: string }) {
+  const { onToolApprovalResponse } = usePostMessagesContext();
+  const toolName = part.type.slice("tool-".length);
+  const toolCallId = part.toolCallId;
+  const approval = part.approval;
+
   return (
     <>
-      {(message.toolCalls ?? []).map((toolCall) => (
-        <DefaultToolCall key={toolCall.id} toolCall={toolCall} />
-      ))}
+      <Tool defaultOpen={part.state !== "output-available" && part.state !== "output-error"}>
+        <ToolHeader state={part.state} title={toolName} type={part.type} />
+        <ToolContent>
+          {part.input !== undefined ? <ToolInput input={part.input} /> : null}
+          <ToolOutput errorText={part.errorText} output={part.output} />
+        </ToolContent>
+      </Tool>
+      {approval ? (
+        <Confirmation approval={approval} state={part.state}>
+          <ConfirmationRequest>
+            Approve running <code>{toolName}</code>?
+          </ConfirmationRequest>
+          <ConfirmationAccepted>
+            <CheckIcon className="size-4" />
+            <span>Approved</span>
+          </ConfirmationAccepted>
+          <ConfirmationRejected>
+            <XIcon className="size-4" />
+            <span>Rejected</span>
+          </ConfirmationRejected>
+          <ConfirmationActions>
+            <ConfirmationAction
+              onClick={() =>
+                onToolApprovalResponse?.({
+                  messageId,
+                  toolCallId,
+                  approvalId: approval.id,
+                  approved: false,
+                })
+              }
+              variant="outline"
+            >
+              Reject
+            </ConfirmationAction>
+            <ConfirmationAction
+              onClick={() =>
+                onToolApprovalResponse?.({
+                  messageId,
+                  toolCallId,
+                  approvalId: approval.id,
+                  approved: true,
+                })
+              }
+              variant="default"
+            >
+              Approve
+            </ConfirmationAction>
+          </ConfirmationActions>
+        </Confirmation>
+      ) : null}
     </>
   );
 }
 
-function DefaultToolCall({ toolCall }: { toolCall: DisplayToolCall }) {
-  const state =
-    toolCall.state === "completed"
-      ? "output-available"
-      : toolCall.state === "error"
-        ? "output-error"
-        : "input-available";
+function MessageParts({ message }: { message: DisplayMessage }) {
+  const nodes: ReactNode[] = [];
+  const parts = message.parts;
+  let i = 0;
+  let renderedDisplayText = false;
 
+  while (i < parts.length) {
+    const part = parts[i];
+    if (!part) break;
+
+    if (part.type === "reasoning") {
+      let text = part.text;
+      let streaming = part.state === "streaming";
+      let j = i + 1;
+      while (j < parts.length && parts[j]?.type === "reasoning") {
+        const next = parts[j] as Extract<UIMessage["parts"][number], { type: "reasoning" }>;
+        text += `\n\n${next.text}`;
+        streaming = streaming || next.state === "streaming";
+        j += 1;
+      }
+      const isStreaming = message.status === "streaming" && streaming;
+      nodes.push(
+        <Reasoning isStreaming={isStreaming} key={`reasoning-${i}`}>
+          <ReasoningTrigger />
+          <ReasoningContent>{text}</ReasoningContent>
+        </Reasoning>,
+      );
+      i = j;
+      continue;
+    }
+
+    if (part.type === "text") {
+      if (message.displayText !== undefined) {
+        if (!renderedDisplayText) {
+          nodes.push(<MessageResponse key="display-text">{message.displayText}</MessageResponse>);
+          renderedDisplayText = true;
+        }
+        i += 1;
+        continue;
+      }
+      nodes.push(<MessageResponse key={`text-${i}`}>{part.text}</MessageResponse>);
+      i += 1;
+      continue;
+    }
+
+    if (isToolPart(part)) {
+      nodes.push(
+        <DefaultToolPart key={`tool-${part.toolCallId ?? i}`} messageId={message.id} part={part} />,
+      );
+      i += 1;
+      continue;
+    }
+
+    i += 1;
+  }
+
+  if (message.displayText !== undefined && !renderedDisplayText) {
+    nodes.push(<MessageResponse key="display-text">{message.displayText}</MessageResponse>);
+  }
+
+  return nodes;
+}
+
+/** Renders tool-* parts from the message (override via children). */
+export function PostMessageTools({ children }: { children?: ReactNode }) {
+  const { message } = usePostMessageContext();
+  const toolParts = message.parts.filter(isToolPart);
+  if (toolParts.length === 0) return null;
+  if (children !== undefined) return <>{children}</>;
   return (
-    <Tool defaultOpen={toolCall.state === "running"}>
-      <ToolHeader state={state} title={toolCall.toolName} type={`tool-${toolCall.toolName}`} />
-      <ToolContent>
-        {toolCall.input !== undefined ? <ToolInput input={toolCall.input} /> : null}
-        <ToolOutput errorText={toolCall.errorText} output={toolCall.output} />
-      </ToolContent>
-    </Tool>
+    <>
+      {toolParts.map((part, index) => (
+        <DefaultToolPart
+          key={part.toolCallId ?? `tool-${index}`}
+          messageId={message.id}
+          part={part}
+        />
+      ))}
+    </>
   );
 }
 
@@ -211,8 +353,7 @@ export function PostMessageContent({ children }: { children?: ReactNode }) {
   if (children !== undefined) return <MessageContent>{children}</MessageContent>;
   return (
     <MessageContent>
-      <PostMessageTools />
-      {message.content.length > 0 ? <MessageResponse>{message.content}</MessageResponse> : null}
+      <MessageParts message={message} />
     </MessageContent>
   );
 }

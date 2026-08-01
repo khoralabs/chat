@@ -15,24 +15,27 @@ export type DisplayAttachment = {
   sourceRef?: ChatSourceWire["sourceRef"];
 };
 
+/** Optional helper shape for hosts that want flattened tool calls. */
 export type DisplayToolCall = {
   id: string;
   toolName: string;
   input?: unknown;
   output?: unknown;
   errorText?: string;
-  state: "running" | "completed" | "error";
+  state: "running" | "completed" | "error" | "awaiting-approval" | "denied";
+  approval?: { id: string; approved?: boolean; reason?: string };
 };
 
 export type DisplayMessage = {
   id: string;
   role: "user" | "assistant";
-  content: string;
+  parts: UIMessage["parts"];
   createdAtMs: number;
   author: ChatAuthor | null;
   status?: Post["status"];
   attachments?: DisplayAttachment[];
-  toolCalls?: DisplayToolCall[];
+  /** Set when metadata.displayText overrides rendered text parts. */
+  displayText?: string;
 };
 
 export type PostToDisplayOptions = {
@@ -64,6 +67,7 @@ export function extractToolCallsFromParts(parts: UIMessage["parts"]): DisplayToo
       input?: unknown;
       output?: unknown;
       errorText?: string;
+      approval?: { id: string; approved?: boolean; reason?: string };
     };
     const toolName = part.type.slice("tool-".length);
     toolCalls.push({
@@ -72,15 +76,20 @@ export function extractToolCallsFromParts(parts: UIMessage["parts"]): DisplayToo
       input: toolPart.input,
       output: toolPart.output,
       errorText: toolPart.errorText,
-      state:
-        toolPart.state === "output-available"
-          ? "completed"
-          : toolPart.state === "output-error"
-            ? "error"
-            : "running",
+      state: toolStateForDisplay(toolPart.state),
+      approval: toolPart.approval,
     });
   }
   return toolCalls;
+}
+
+export function hasRenderableParts(parts: UIMessage["parts"]): boolean {
+  return parts.some(
+    (part) =>
+      part.type === "text" ||
+      part.type === "reasoning" ||
+      (typeof part.type === "string" && part.type.startsWith("tool-")),
+  );
 }
 
 export function mapDocumentMetadata(document: ChatDocumentWire): DisplayAttachment {
@@ -162,10 +171,7 @@ export function postToDisplayMessage(
     | undefined;
   if (metadata?.kickoff === true) return null;
 
-  const content =
-    typeof metadata?.displayText === "string"
-      ? metadata.displayText
-      : extractTextFromParts(post.parts);
+  const displayText = typeof metadata?.displayText === "string" ? metadata.displayText : undefined;
 
   const documentAttachments = (metadata?.documents ?? []).map((document) =>
     withResolvedUrl(mapDocumentMetadata(document), options.resolveAttachmentUrl),
@@ -178,13 +184,11 @@ export function postToDisplayMessage(
       ? [...documentAttachments, ...sourceAttachments]
       : undefined;
 
-  const toolCalls = extractToolCallsFromParts(post.parts);
-
   if (
     post.status !== "streaming" &&
-    content.length === 0 &&
-    (attachments?.length ?? 0) === 0 &&
-    toolCalls.length === 0
+    !hasRenderableParts(post.parts) &&
+    displayText === undefined &&
+    (attachments?.length ?? 0) === 0
   ) {
     return null;
   }
@@ -192,12 +196,12 @@ export function postToDisplayMessage(
   return {
     id: post.id,
     role: post.role,
-    content,
+    parts: post.parts,
     createdAtMs: post.createdAtMs,
     author: options.resolveAuthor?.(post.author) ?? defaultAuthor(post.author),
     status: post.status,
     attachments,
-    toolCalls,
+    displayText,
   };
 }
 
@@ -213,5 +217,7 @@ export function postsToDisplayMessages(
 export function toolStateForDisplay(state: string | undefined): DisplayToolCall["state"] {
   if (state === "output-available") return "completed";
   if (state === "output-error") return "error";
+  if (state === "approval-requested") return "awaiting-approval";
+  if (state === "output-denied") return "denied";
   return "running";
 }

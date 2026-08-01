@@ -19,6 +19,7 @@ export {
   extractToolCallsFromParts,
   formatPostTimestamp,
   guessAttachmentMimeType,
+  hasRenderableParts,
   mapDocumentMetadata,
   mapSourceMetadata,
   toolStateForDisplay,

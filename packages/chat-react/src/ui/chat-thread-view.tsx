@@ -9,8 +9,10 @@ import { type ScrollTarget, useScrollToPost } from "../hooks/use-scroll-to-post.
 import { ConversationProvider } from "./ai-elements/conversation.tsx";
 import type { ChatAuthor } from "./author-avatar.tsx";
 import { ChatDropOverlay } from "./drop-overlay.tsx";
-import { PostMessages } from "./post-messages.tsx";
+import { PostMessages, type ToolApprovalResponse } from "./post-messages.tsx";
 import { PromptComposer, type PromptInputMessage } from "./prompt-composer.tsx";
+
+export type { ToolApprovalResponse };
 
 function ChatThreadScrollTarget({
   scrollTarget,
@@ -44,6 +46,7 @@ export function ChatThreadView({
   onStop,
   onTextChange,
   onError,
+  onToolApprovalResponse,
   composerHeader,
   messagesChildren,
   composerChildren,
@@ -71,6 +74,7 @@ export function ChatThreadView({
   onStop: () => void;
   onTextChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => void;
   onError: (error: string) => void;
+  onToolApprovalResponse?: (response: ToolApprovalResponse) => void;
   composerHeader?: ReactNode;
   messagesChildren?: ReactNode;
   composerChildren?: ReactNode;
@@ -95,6 +99,7 @@ export function ChatThreadView({
           agentAuthor={agentAuthor}
           awaitingOpening={awaitingOpening}
           messages={messages}
+          onToolApprovalResponse={onToolApprovalResponse}
           showAgentLoading={agentLoading}
           status={status}
         >
@@ -134,6 +139,7 @@ export function ChatThreadMessages({
   awaitingOpening = false,
   showAgentLoading,
   agentAuthor,
+  onToolApprovalResponse,
   children,
 }: {
   messages: DisplayMessage[];
@@ -141,6 +147,7 @@ export function ChatThreadMessages({
   awaitingOpening?: boolean;
   showAgentLoading?: boolean;
   agentAuthor: ChatAuthor | null;
+  onToolApprovalResponse?: (response: ToolApprovalResponse) => void;
   children?: ReactNode;
 }) {
   return (
@@ -148,6 +155,7 @@ export function ChatThreadMessages({
       awaitingOpening={awaitingOpening}
       loadingAuthor={agentAuthor}
       messages={messages}
+      onToolApprovalResponse={onToolApprovalResponse}
       showAgentLoading={showAgentLoading}
       status={status}
       withProvider={false}

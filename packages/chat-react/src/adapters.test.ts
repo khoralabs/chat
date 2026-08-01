@@ -5,6 +5,7 @@ import {
   extractToolCallsFromParts,
   formatPostTimestamp,
   guessAttachmentMimeType,
+  hasRenderableParts,
   postsToDisplayMessages,
   postToDisplayMessage,
   toolStateForDisplay,
@@ -36,7 +37,7 @@ describe("adapters", () => {
     ).toBe("ab");
   });
 
-  test("extractToolCallsFromParts maps tool states", () => {
+  test("extractToolCallsFromParts maps tool states and approval", () => {
     const toolCalls = extractToolCallsFromParts([
       {
         type: "tool-search",
@@ -45,9 +46,28 @@ describe("adapters", () => {
         input: { q: "x" },
         output: { ok: true },
       },
+      {
+        type: "tool-delete",
+        toolCallId: "tc-2",
+        state: "approval-requested",
+        input: { path: "/tmp/x" },
+        approval: { id: "appr-1" },
+      },
     ]);
     expect(toolCalls[0]?.state).toBe("completed");
     expect(toolCalls[0]?.toolName).toBe("search");
+    expect(toolCalls[1]?.state).toBe("awaiting-approval");
+    expect(toolCalls[1]?.approval).toEqual({ id: "appr-1" });
+  });
+
+  test("hasRenderableParts detects text, reasoning, and tools", () => {
+    expect(hasRenderableParts([{ type: "step-start" }])).toBe(false);
+    expect(hasRenderableParts([{ type: "reasoning", text: "think", state: "done" }])).toBe(true);
+    expect(
+      hasRenderableParts([
+        { type: "tool-x", toolCallId: "1", state: "input-available", input: {} },
+      ]),
+    ).toBe(true);
   });
 
   test("postToDisplayMessage skips kickoff metadata", () => {
@@ -58,12 +78,13 @@ describe("adapters", () => {
     ).toBeNull();
   });
 
-  test("postToDisplayMessage uses displayText metadata", () => {
-    const message = postToDisplayMessage(
-      basePost({ metadata: { displayText: "shown" }, parts: [{ type: "text", text: "hidden" }] }),
-      { resolveAuthor: () => ({ name: "Zach" }) },
-    );
-    expect(message?.content).toBe("shown");
+  test("postToDisplayMessage passes parts and displayText metadata", () => {
+    const parts = [{ type: "text" as const, text: "hidden" }];
+    const message = postToDisplayMessage(basePost({ metadata: { displayText: "shown" }, parts }), {
+      resolveAuthor: () => ({ name: "Zach" }),
+    });
+    expect(message?.parts).toEqual(parts);
+    expect(message?.displayText).toBe("shown");
     expect(message?.author?.name).toBe("Zach");
   });
 
@@ -78,8 +99,40 @@ describe("adapters", () => {
       }),
     );
 
-    expect(message?.content).toBe("");
+    expect(message?.parts).toEqual([]);
     expect(message?.status).toBe("streaming");
+  });
+
+  test("postToDisplayMessage keeps reasoning-only posts", () => {
+    const parts = [{ type: "reasoning" as const, text: "thinking", state: "done" as const }];
+    const message = postToDisplayMessage(
+      basePost({
+        role: "assistant",
+        parts,
+        author: { type: "agent", id: "agent-1" },
+      }),
+    );
+    expect(message?.parts).toEqual(parts);
+  });
+
+  test("postToDisplayMessage round-trips approval-bearing tool parts", () => {
+    const parts = [
+      {
+        type: "tool-delete_file" as const,
+        toolCallId: "tc-1",
+        state: "approval-requested" as const,
+        input: { filePath: "/tmp/x" },
+        approval: { id: "appr-1" },
+      },
+    ];
+    const message = postToDisplayMessage(
+      basePost({
+        role: "assistant",
+        parts,
+        author: { type: "agent", id: "agent-1" },
+      }),
+    );
+    expect(message?.parts).toEqual(parts);
   });
 
   test("postsToDisplayMessages filters null entries", () => {
@@ -146,7 +199,7 @@ describe("adapters", () => {
     );
 
     expect(message).not.toBeNull();
-    expect(message?.content).toBe("");
+    expect(message?.parts).toEqual([]);
     expect(message?.attachments).toHaveLength(1);
   });
 
@@ -154,5 +207,7 @@ describe("adapters", () => {
     expect(toolStateForDisplay("output-available")).toBe("completed");
     expect(toolStateForDisplay("output-error")).toBe("error");
     expect(toolStateForDisplay("input-available")).toBe("running");
+    expect(toolStateForDisplay("approval-requested")).toBe("awaiting-approval");
+    expect(toolStateForDisplay("output-denied")).toBe("denied");
   });
 });

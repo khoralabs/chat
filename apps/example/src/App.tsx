@@ -67,7 +67,7 @@ const mockMessages: DisplayMessage[] = [
   {
     id: "catalog-user",
     role: "user",
-    content: "Show the chat primitives with a file attachment.",
+    parts: [{ type: "text", text: "Show the chat primitives with a file attachment." }],
     createdAtMs: Date.now() - 90_000,
     author: userAuthor,
     attachments: [
@@ -82,46 +82,59 @@ const mockMessages: DisplayMessage[] = [
   {
     id: "catalog-agent",
     role: "assistant",
-    content: "Here is a static message with markdown, a tool call, attribution, and timestamp.",
-    createdAtMs: Date.now() - 60_000,
-    author: agentAuthor,
-    toolCalls: [
+    parts: [
       {
-        id: "catalog-tool",
-        toolName: "inspectCatalog",
-        state: "completed",
+        type: "tool-inspectCatalog",
+        toolCallId: "catalog-tool",
+        state: "output-available",
         input: { components: ["PostMessages", "PromptComposer", "ChatThreadView"] },
         output: { represented: true },
       },
+      {
+        type: "text",
+        text: "Here is a static message with markdown, a tool call, attribution, and timestamp.",
+      },
     ],
+    createdAtMs: Date.now() - 60_000,
+    author: agentAuthor,
   },
   {
     id: "catalog-user-2",
     role: "user",
-    content: "Scroll this list — Conversation uses scroll-fade on overflow.",
+    parts: [
+      { type: "text", text: "Scroll this list — Conversation uses scroll-fade on overflow." },
+    ],
     createdAtMs: Date.now() - 45_000,
     author: userAuthor,
   },
   {
     id: "catalog-agent-2",
     role: "assistant",
-    content:
-      "At rest the bottom edge fades. Mid-scroll both edges fade. At the end the bottom sharpens.",
+    parts: [
+      {
+        type: "text",
+        text: "At rest the bottom edge fades. Mid-scroll both edges fade. At the end the bottom sharpens.",
+      },
+    ],
     createdAtMs: Date.now() - 30_000,
     author: agentAuthor,
   },
   {
     id: "catalog-user-3",
     role: "user",
-    content: "Keep going so the viewport overflows.",
+    parts: [{ type: "text", text: "Keep going so the viewport overflows." }],
     createdAtMs: Date.now() - 20_000,
     author: userAuthor,
   },
   {
     id: "catalog-agent-3",
     role: "assistant",
-    content:
-      "Extra turns fill the column so you can feel the mask dissolve content at the edges—no overlay, no scroll listeners.",
+    parts: [
+      {
+        type: "text",
+        text: "Extra turns fill the column so you can feel the mask dissolve content at the edges—no overlay, no scroll listeners.",
+      },
+    ],
     createdAtMs: Date.now() - 10_000,
     author: agentAuthor,
   },
