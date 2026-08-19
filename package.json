@@ -12,6 +12,7 @@
     "typecheck": "bun run --filter '@khoralabs/chat' typecheck && bun run --filter '@khoralabs/chat-react' typecheck",
     "test": "bun test",
     "prepare": "husky",
+    "review": "agent-review run --scope staged --include-workstream",
     "build": "bun run scripts/build-packages.ts",
     "verify": "bun run format:check && bun run typecheck && bun run test && bun run build",
     "release:bump": "bun run scripts/bump-versions.ts",
@@ -21,6 +22,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.16",
+    "@khoralabs/agent-review": "0.2.0",
     "@types/bun": "latest",
     "husky": "^9.1.7",
     "typescript": "^5"
