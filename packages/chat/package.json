@@ -79,18 +79,28 @@
       "types": "./src/persistence/testing/index.ts",
       "import": "./src/persistence/testing/index.ts",
       "default": "./src/persistence/testing/index.ts"
+    },
+    "./agent": {
+      "types": "./src/agent/index.ts",
+      "import": "./src/agent/index.ts",
+      "default": "./src/agent/index.ts"
     }
   },
   "dependencies": {
     "@khoralabs/sourcemaps": "^0.1.0",
+    "@noble/ed25519": "^3.1.0",
     "ai": "^7.0.9"
   },
   "peerDependencies": {
+    "@khoralabs/relay": "^0.1.1",
     "@khoralabs/sqlite-crypto": "^0.1.0",
     "@tursodatabase/serverless": "*",
     "typescript": "^5"
   },
   "peerDependenciesMeta": {
+    "@khoralabs/relay": {
+      "optional": true
+    },
     "@khoralabs/sqlite-crypto": {
       "optional": true
     },
@@ -99,6 +109,7 @@
     }
   },
   "devDependencies": {
+    "@khoralabs/relay": "^0.1.1",
     "@khoralabs/sqlite-crypto": "^0.1.0",
     "@tursodatabase/serverless": "latest",
     "@types/bun": "latest",

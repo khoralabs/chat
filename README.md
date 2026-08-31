@@ -18,6 +18,7 @@ Generic, use-case-agnostic messaging ledger libraries for Khora.
 | `./turso-serverless/sql` | Low-level SQL helpers |
 | `./http` | ChatService-shaped HTTP/WS transport |
 | `./http/client` `./http/routes` `./http/service` `./http/server` | HTTP submodules |
+| `./agent` | DID-key `ChatSigner` adapter + signed agent chat backend over HTTP |
 | `./testing` | `runChatPersistenceContractTests` |
 
 **Runtime:** Bun is required for hashing (`Bun.CryptoHasher`), `./sqlite`, and `./http/server`. Prefer `./turso-serverless` for remote SQL.
@@ -39,6 +40,8 @@ Channel
 ## Signed posts
 
 Opt in with `withSignedChatPersistence` from `@khoralabs/chat/persistence`. Hosts provide `ChatSigner` / `ChatVerifier` (no crypto in chat packages). When wrapped, every committed post version is signed: `appendPost` requires a verified envelope; `completeStreamedPost` auto-signs via the signer.
+
+For DID-key agents, use `createDidKeyChatCrypto` and `createRemoteSignedChat` from `@khoralabs/chat/agent` with a `@khoralabs/relay` `RelaySigner` resolver.
 
 ## HTTP transport
 
