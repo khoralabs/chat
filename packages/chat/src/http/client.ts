@@ -12,6 +12,14 @@ import type {
 } from "../persistence/core/persistence/types.ts";
 import type { ChatService } from "../service.ts";
 import type { SignedEnvelope } from "../types.ts";
+import { throwChatHttpClientError } from "./client-error.ts";
+import {
+  CHAT_HTTP_PATH,
+  chatPostAbortPath,
+  chatPostCompletePath,
+  chatPostDeltasPath,
+  chatThreadWsPath,
+} from "./contracts/http.ts";
 
 async function readJson<T>(res: Response): Promise<T> {
   const text = await res.text();
@@ -29,7 +37,7 @@ async function readJson<T>(res: Response): Promise<T> {
         throw new ChatNotFoundError(match[1].toLowerCase(), match[2]);
       }
     }
-    throw new Error(message);
+    throwChatHttpClientError(res.status, res.statusText, text);
   }
   return (text.length > 0 ? JSON.parse(text) : {}) as T;
 }
@@ -82,29 +90,29 @@ export function createChatClient(options: ChatServiceClientOptions): ChatService
 
   return {
     getChannel(id) {
-      return post("/channels/get", { channelId: id });
+      return post(CHAT_HTTP_PATH.channelsGet, { channelId: id });
     },
     createChannel(input: CreateChannelInput) {
-      return post("/channels/create", input);
+      return post(CHAT_HTTP_PATH.channelsCreate, input);
     },
     getThread(id) {
-      return post("/threads/get", { threadId: id });
+      return post(CHAT_HTTP_PATH.threadsGet, { threadId: id });
     },
     createThread(input: CreateThreadInput) {
-      return post("/threads/create", input);
+      return post(CHAT_HTTP_PATH.threadsCreate, input);
     },
     listThreads(input: ListThreadsInput) {
-      return post("/threads/list", input);
+      return post(CHAT_HTTP_PATH.threadsList, input);
     },
     listPosts(input: ListPostsInput) {
-      return post("/threads/list-posts", input);
+      return post(CHAT_HTTP_PATH.threadsListPosts, input);
     },
     async appendPost(input: AppendPostInput) {
-      return post("/threads/append-post", input);
+      return post(CHAT_HTTP_PATH.threadsAppendPost, input);
     },
     async getThreadTip(threadId) {
       const result = await post<{ tip: Awaited<ReturnType<ChatService["getThreadTip"]>> }>(
-        "/threads/tip",
+        CHAT_HTTP_PATH.threadsTip,
         { threadId },
       );
       return result.tip;
@@ -112,32 +120,32 @@ export function createChatClient(options: ChatServiceClientOptions): ChatService
     async listThreadParticipants(threadId) {
       const result = await post<{
         participants: Awaited<ReturnType<ChatService["listThreadParticipants"]>>;
-      }>("/threads/list-participants", { threadId });
+      }>(CHAT_HTTP_PATH.threadsListParticipants, { threadId });
       return result.participants;
     },
     addThreadParticipant(input: AddThreadParticipantInput) {
-      return post("/threads/add-participant", input);
+      return post(CHAT_HTTP_PATH.threadsAddParticipant, input);
     },
     async setPostVersionSignature(versionId: string, signature: SignedEnvelope) {
-      await post("/posts/set-signature", { versionId, signature });
+      await post(CHAT_HTTP_PATH.postsSetSignature, { versionId, signature });
     },
     startStreamedPost(input: StartStreamedPostInput) {
-      return post("/internal/chat/streamed-posts", input);
+      return post(CHAT_HTTP_PATH.streamedPosts, input);
     },
     applyPostDelta(input) {
-      return post(`/internal/chat/posts/${encodeURIComponent(input.postId)}/deltas`, input);
+      return post(chatPostDeltasPath(input.postId), input);
     },
     completeStreamedPost(input) {
-      return post(`/internal/chat/posts/${encodeURIComponent(input.postId)}/complete`, input);
+      return post(chatPostCompletePath(input.postId), input);
     },
     abortStreamedPost(input) {
-      return post(`/internal/chat/posts/${encodeURIComponent(input.postId)}/abort`, input);
+      return post(chatPostAbortPath(input.postId), input);
     },
     subscribeToThread(threadId, handler) {
       if (options.subscribeToThread !== undefined) {
         return options.subscribeToThread(threadId, handler);
       }
-      const wsUrl = `${baseUrl.replace(/^http/, "ws")}/ws/threads/${encodeURIComponent(threadId)}?token=${encodeURIComponent(options.token)}`;
+      const wsUrl = `${baseUrl.replace(/^http/, "ws")}${chatThreadWsPath(threadId)}?token=${encodeURIComponent(options.token)}`;
       const ws = new WebSocket(wsUrl);
       ws.onmessage = (event) => handler(JSON.parse(String(event.data)) as ChatEvent);
       return () => ws.close();

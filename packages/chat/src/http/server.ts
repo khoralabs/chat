@@ -8,6 +8,12 @@ import {
   resolveChatDbPath,
   sqlCipherKeyFromEnv,
 } from "./config.ts";
+import { CHAT_ERROR_CODE } from "./contracts/errors.ts";
+import {
+  CHAT_HTTP_PATH,
+  CHAT_PROTOCOL_VERSION,
+  type ChatHealthResponse,
+} from "./contracts/http.ts";
 import { createChatRoutesWithParams, dispatchChatRoute, requireInternalToken } from "./routes.ts";
 import { type ChatStorageConfig, createChatHttpRuntime, createChatStorage } from "./service.ts";
 
@@ -47,15 +53,21 @@ export async function startChatHttpServer(
     port: opts.port ?? 0,
     fetch(req, bunServer) {
       const url = new URL(req.url);
-      if (req.method === "GET" && url.pathname === "/health") {
-        return Response.json({ ok: true });
+      if (req.method === "GET" && url.pathname === CHAT_HTTP_PATH.health) {
+        const body: ChatHealthResponse = { ok: true, version: CHAT_PROTOCOL_VERSION };
+        return Response.json(body);
       }
-      if (url.pathname.startsWith("/ws/threads/")) {
+      if (url.pathname.startsWith(CHAT_HTTP_PATH.threadsWsPrefix)) {
         const authError = requireInternalToken(req, token);
         if (authError !== null) return authError;
-        const threadId = decodeURIComponent(url.pathname.slice("/ws/threads/".length));
+        const threadId = decodeURIComponent(
+          url.pathname.slice(CHAT_HTTP_PATH.threadsWsPrefix.length),
+        );
         if (threadId.length === 0) {
-          return Response.json({ error: "threadId is required" }, { status: 400 });
+          return Response.json(
+            { error: "threadId is required", code: CHAT_ERROR_CODE.invalid_request },
+            { status: 400 },
+          );
         }
         const upgraded = bunServer.upgrade(req, { data: { threadId } satisfies WsData });
         if (upgraded) return undefined;
