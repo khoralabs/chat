@@ -2,6 +2,7 @@ import type { UIMessage } from "ai";
 import type { PostModelMetadata, PostUsage, ScopeRef, SignedEnvelope } from "../domain.ts";
 import { isChatNotFoundError } from "../errors.ts";
 import type { ChatService } from "../service.ts";
+import { CHAT_HTTP_PATH, chatRouteKey } from "./contracts/http.ts";
 
 function json(value: unknown, init?: ResponseInit): Response {
   return Response.json(value, init);
@@ -76,9 +77,9 @@ export function createChatRoutes(
   const authorized = resolveAuthorize(options);
 
   return {
-    "GET /health": async () => json({ ok: true }),
+    [chatRouteKey("GET", CHAT_HTTP_PATH.health)]: async () => json({ ok: true }),
 
-    "POST /channels/get": async (req) => {
+    [chatRouteKey("POST", CHAT_HTTP_PATH.channelsGet)]: async (req) => {
       const error = await authorized(req);
       if (error !== null) return error;
       const body = await readJson<Record<string, unknown>>(req);
@@ -91,7 +92,7 @@ export function createChatRoutes(
       }
     },
 
-    "POST /channels/create": async (req) => {
+    [chatRouteKey("POST", CHAT_HTTP_PATH.channelsCreate)]: async (req) => {
       const error = await authorized(req);
       if (error !== null) return error;
       const body = await readJson<Record<string, unknown>>(req);
@@ -109,7 +110,7 @@ export function createChatRoutes(
       }
     },
 
-    "POST /threads/get": async (req) => {
+    [chatRouteKey("POST", CHAT_HTTP_PATH.threadsGet)]: async (req) => {
       const error = await authorized(req);
       if (error !== null) return error;
       const body = await readJson<Record<string, unknown>>(req);
@@ -122,7 +123,7 @@ export function createChatRoutes(
       }
     },
 
-    "POST /threads/create": async (req) => {
+    [chatRouteKey("POST", CHAT_HTTP_PATH.threadsCreate)]: async (req) => {
       const error = await authorized(req);
       if (error !== null) return error;
       const body = await readJson<{
@@ -146,7 +147,7 @@ export function createChatRoutes(
       }
     },
 
-    "POST /threads/list": async (req) => {
+    [chatRouteKey("POST", CHAT_HTTP_PATH.threadsList)]: async (req) => {
       const error = await authorized(req);
       if (error !== null) return error;
       const body = await readJson<{
@@ -172,7 +173,7 @@ export function createChatRoutes(
       }
     },
 
-    "POST /threads/list-posts": async (req) => {
+    [chatRouteKey("POST", CHAT_HTTP_PATH.threadsListPosts)]: async (req) => {
       const error = await authorized(req);
       if (error !== null) return error;
       const body = await readJson<{ threadId?: string; limit?: number; cursor?: string }>(req);
@@ -188,7 +189,7 @@ export function createChatRoutes(
       }
     },
 
-    "POST /threads/tip": async (req) => {
+    [chatRouteKey("POST", CHAT_HTTP_PATH.threadsTip)]: async (req) => {
       const error = await authorized(req);
       if (error !== null) return error;
       const body = await readJson<Record<string, unknown>>(req);
@@ -201,7 +202,7 @@ export function createChatRoutes(
       }
     },
 
-    "POST /threads/list-participants": async (req) => {
+    [chatRouteKey("POST", CHAT_HTTP_PATH.threadsListParticipants)]: async (req) => {
       const error = await authorized(req);
       if (error !== null) return error;
       const body = await readJson<Record<string, unknown>>(req);
@@ -214,7 +215,7 @@ export function createChatRoutes(
       }
     },
 
-    "POST /threads/add-participant": async (req) => {
+    [chatRouteKey("POST", CHAT_HTTP_PATH.threadsAddParticipant)]: async (req) => {
       const error = await authorized(req);
       if (error !== null) return error;
       const body = await readJson<{
@@ -240,7 +241,7 @@ export function createChatRoutes(
       }
     },
 
-    "POST /threads/append-post": async (req) => {
+    [chatRouteKey("POST", CHAT_HTTP_PATH.threadsAppendPost)]: async (req) => {
       const error = await authorized(req);
       if (error !== null) return error;
       const body = await readJson<{
@@ -272,7 +273,7 @@ export function createChatRoutes(
       }
     },
 
-    "POST /posts/set-signature": async (req) => {
+    [chatRouteKey("POST", CHAT_HTTP_PATH.postsSetSignature)]: async (req) => {
       const error = await authorized(req);
       if (error !== null) return error;
       const body = await readJson<{ versionId?: string; signature?: SignedEnvelope }>(req);
@@ -287,7 +288,7 @@ export function createChatRoutes(
       }
     },
 
-    "POST /internal/chat/streamed-posts": async (req) => {
+    [chatRouteKey("POST", CHAT_HTTP_PATH.streamedPosts)]: async (req) => {
       const error = await authorized(req);
       if (error !== null) return error;
       const body = await readJson<{
@@ -313,7 +314,7 @@ export function createChatRoutes(
       }
     },
 
-    "POST /internal/chat/posts/:postId/deltas": async (req) => {
+    [chatRouteKey("POST", CHAT_HTTP_PATH.postDeltasTemplate)]: async (req) => {
       const error = await authorized(req);
       if (error !== null) return error;
       const url = new URL(req.url);
@@ -338,7 +339,7 @@ export function createChatRoutes(
       }
     },
 
-    "POST /internal/chat/posts/:postId/complete": async (req) => {
+    [chatRouteKey("POST", CHAT_HTTP_PATH.postCompleteTemplate)]: async (req) => {
       const error = await authorized(req);
       if (error !== null) return error;
       const url = new URL(req.url);
@@ -358,7 +359,7 @@ export function createChatRoutes(
       }
     },
 
-    "POST /internal/chat/posts/:postId/abort": async (req) => {
+    [chatRouteKey("POST", CHAT_HTTP_PATH.postAbortTemplate)]: async (req) => {
       const error = await authorized(req);
       if (error !== null) return error;
       const url = new URL(req.url);
@@ -397,7 +398,7 @@ export function createChatRoutesWithParams(
 
   return {
     ...base,
-    "POST /internal/chat/threads/:threadId/streamed-posts": async (req) => {
+    [chatRouteKey("POST", CHAT_HTTP_PATH.threadStreamedPostsTemplate)]: async (req) => {
       const error = await authorized(req);
       if (error !== null) return error;
       const url = new URL(req.url);
@@ -440,10 +441,10 @@ export async function dispatchChatRoute(
   const url = new URL(req.url);
 
   const paramPaths = [
-    "POST /internal/chat/threads/:threadId/streamed-posts",
-    "POST /internal/chat/posts/:postId/deltas",
-    "POST /internal/chat/posts/:postId/complete",
-    "POST /internal/chat/posts/:postId/abort",
+    chatRouteKey("POST", CHAT_HTTP_PATH.threadStreamedPostsTemplate),
+    chatRouteKey("POST", CHAT_HTTP_PATH.postDeltasTemplate),
+    chatRouteKey("POST", CHAT_HTTP_PATH.postCompleteTemplate),
+    chatRouteKey("POST", CHAT_HTTP_PATH.postAbortTemplate),
   ];
 
   for (const pattern of paramPaths) {

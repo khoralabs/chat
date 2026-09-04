@@ -8,6 +8,7 @@ import {
   resolveChatDbPath,
   sqlCipherKeyFromEnv,
 } from "./config.ts";
+import { CHAT_HTTP_PATH } from "./contracts/http.ts";
 import { createChatRoutesWithParams, dispatchChatRoute, requireInternalToken } from "./routes.ts";
 import { type ChatStorageConfig, createChatHttpRuntime, createChatStorage } from "./service.ts";
 
@@ -47,13 +48,15 @@ export async function startChatHttpServer(
     port: opts.port ?? 0,
     fetch(req, bunServer) {
       const url = new URL(req.url);
-      if (req.method === "GET" && url.pathname === "/health") {
+      if (req.method === "GET" && url.pathname === CHAT_HTTP_PATH.health) {
         return Response.json({ ok: true });
       }
-      if (url.pathname.startsWith("/ws/threads/")) {
+      if (url.pathname.startsWith(CHAT_HTTP_PATH.threadsWsPrefix)) {
         const authError = requireInternalToken(req, token);
         if (authError !== null) return authError;
-        const threadId = decodeURIComponent(url.pathname.slice("/ws/threads/".length));
+        const threadId = decodeURIComponent(
+          url.pathname.slice(CHAT_HTTP_PATH.threadsWsPrefix.length),
+        );
         if (threadId.length === 0) {
           return Response.json({ error: "threadId is required" }, { status: 400 });
         }

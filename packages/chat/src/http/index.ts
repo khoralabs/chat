@@ -15,6 +15,16 @@ export {
   sqlCipherKeyFromEnv,
 } from "./config.ts";
 export {
+  CHAT_HTTP_PATH,
+  type ChatHttpPathKey,
+  chatPostAbortPath,
+  chatPostCompletePath,
+  chatPostDeltasPath,
+  chatRouteKey,
+  chatThreadStreamedPostsPath,
+  chatThreadWsPath,
+} from "./contracts/http.ts";
+export {
   type AuthorizeRequest,
   createChatRoutes,
   createChatRoutesWithParams,
