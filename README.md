@@ -43,7 +43,7 @@ Channel
 
 Opt in with `withSignedChatPersistence` from `@khoralabs/chat/persistence`. Hosts provide `ChatSigner` / `ChatVerifier` (no crypto in chat packages). When wrapped, every committed post version is signed: `appendPost` requires a verified envelope; `completeStreamedPost` auto-signs via the signer.
 
-For DID-key agents, use `createDidKeyChatCrypto` and `createRemoteSignedChat` from `@khoralabs/chat/agent` with a `@khoralabs/relay` `RelaySigner` resolver.
+For DID-key agents, use `createDidKeyChatCrypto` and `createRemoteSignedChat` from `@khoralabs/chat/agent` with a `@khoralabs/did-key-identity` `Signer` resolver.
 
 ## HTTP transport
 
