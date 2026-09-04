@@ -92,7 +92,7 @@
     "ai": "^7.0.9"
   },
   "peerDependencies": {
-    "@khoralabs/relay": "^0.1.1",
+    "@khoralabs/relay": "^0.2.0",
     "@khoralabs/sqlite-crypto": "^0.1.0",
     "@tursodatabase/serverless": "*",
     "typescript": "^5"
@@ -109,7 +109,7 @@
     }
   },
   "devDependencies": {
-    "@khoralabs/relay": "^0.1.1",
+    "@khoralabs/relay": "^0.2.0",
     "@khoralabs/sqlite-crypto": "^0.1.0",
     "@tursodatabase/serverless": "latest",
     "@types/bun": "latest",

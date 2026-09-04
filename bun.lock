@@ -49,14 +49,14 @@
         "ai": "^7.0.9",
       },
       "devDependencies": {
-        "@khoralabs/relay": "^0.1.1",
+        "@khoralabs/relay": "^0.2.0",
         "@khoralabs/sqlite-crypto": "^0.1.0",
         "@tursodatabase/serverless": "latest",
         "@types/bun": "latest",
         "typescript": "^5",
       },
       "peerDependencies": {
-        "@khoralabs/relay": "^0.1.1",
+        "@khoralabs/relay": "^0.2.0",
         "@khoralabs/sqlite-crypto": "^0.1.0",
         "@tursodatabase/serverless": "*",
         "typescript": "^5",
@@ -257,7 +257,7 @@
 
     "@khoralabs/chat-react": ["@khoralabs/chat-react@workspace:packages/chat-react"],
 
-    "@khoralabs/relay": ["@khoralabs/relay@0.1.1", "", { "dependencies": { "@hpke/core": "^1.9.0", "@noble/curves": "^2.2.0", "@noble/ed25519": "^3.1.0", "@noble/hashes": "^2.2.0", "@scure/base": "^1.2.6", "lru-cache": "^11.5.1", "ts-mls": "^1.6.2" }, "peerDependencies": { "@khoralabs/sqlite-crypto": "^0.1.0", "typescript": "^5" }, "optionalPeers": ["@khoralabs/sqlite-crypto"] }, "sha512-wrkX3g6oe9/KjsZpKhxnd6V0AYXZe53eGKAFMguKBgL0aq0ZYrkbF4miMCAUPlqI6jI25u5V9oAe9ExsaNvBLQ=="],
+    "@khoralabs/relay": ["@khoralabs/relay@0.2.0", "", { "dependencies": { "@hpke/core": "^1.9.0", "@noble/curves": "^2.2.0", "@noble/ed25519": "^3.1.0", "@noble/hashes": "^2.2.0", "@scure/base": "^1.2.6", "lru-cache": "^11.5.1", "ts-mls": "^1.6.2" }, "peerDependencies": { "@khoralabs/sqlite-crypto": "^0.1.0", "typescript": "^5" }, "optionalPeers": ["@khoralabs/sqlite-crypto"] }, "sha512-3/XZlprfvAnCNC2eUP5+jUuNSliwds4IxUc+9NN6C6FlOOBLwcmv9oe8Fm9OJfoSUU1MtF0ZS5zLS6e6iakF/Q=="],
 
     "@khoralabs/sourcemaps": ["@khoralabs/sourcemaps@0.1.0", "", { "peerDependencies": { "typescript": "^5" } }, "sha512-9eXXrtxYeOCGpKdcEWoGtLVzHfi3zF+6s//LPv4SFWoy9tJtGu1hLdW9gGFhtbRfTHDxMb1/RHblk7NREqQdwQ=="],
 
