@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { createMemoryChatPersistence } from "@khoralabs/chat/persistence";
-import { base58Encode } from "@khoralabs/relay/crypto";
+import { didKeyFromEd25519PublicKey } from "@khoralabs/did-key-identity";
 import { getPublicKeyAsync, signAsync } from "@noble/ed25519";
 
 import type { ChatServiceClient } from "../http/client.ts";
@@ -8,19 +8,11 @@ import { createChatService } from "../service.ts";
 import { createSignedChatBackend } from "./backend.ts";
 import { createDidKeyChatCrypto, DID_KEY_CHAT_SIGNATURE_ALGORITHM } from "./chat-crypto.ts";
 
-function didKeyFromPublicKey(pubKey: Uint8Array): string {
-  const prefixed = new Uint8Array(2 + pubKey.length);
-  prefixed[0] = 0xed;
-  prefixed[1] = 0x01;
-  prefixed.set(pubKey, 2);
-  return `did:key:z${base58Encode(prefixed)}`;
-}
-
-async function createTestRelaySigner() {
+async function createTestDidKeySigner() {
   const privateKey = new Uint8Array(32);
   crypto.getRandomValues(privateKey);
   const publicKey = await getPublicKeyAsync(privateKey);
-  const did = didKeyFromPublicKey(publicKey);
+  const did = didKeyFromEd25519PublicKey(publicKey);
   return {
     did,
     sign: (payload: Uint8Array) => signAsync(payload, privateKey),
@@ -38,11 +30,11 @@ function asChatServiceClient(service: ReturnType<typeof createChatService>): Cha
 
 describe("createDidKeyChatCrypto", () => {
   test("signs and verifies with did:key ed25519", async () => {
-    const relay = await createTestRelaySigner();
+    const key = await createTestDidKeySigner();
     const { signer, verifier } = createDidKeyChatCrypto(async (did) =>
-      did === relay.did ? relay : undefined,
+      did === key.did ? key : undefined,
     );
-    const author = { type: "agent" as const, id: relay.did };
+    const author = { type: "agent" as const, id: key.did };
     const payload = new TextEncoder().encode("hello chat");
 
     const envelope = await signer.sign(payload, author);
@@ -53,13 +45,11 @@ describe("createDidKeyChatCrypto", () => {
   });
 
   test("returns false for malformed signatures instead of rejecting", async () => {
-    const relay = await createTestRelaySigner();
-    const { verifier } = createDidKeyChatCrypto(async (did) =>
-      did === relay.did ? relay : undefined,
-    );
+    const key = await createTestDidKeySigner();
+    const { verifier } = createDidKeyChatCrypto(async (did) => (did === key.did ? key : undefined));
     const ok = await verifier.verify(new TextEncoder().encode("payload"), {
       algorithm: DID_KEY_CHAT_SIGNATURE_ALGORITHM,
-      signer: { type: "agent", id: relay.did },
+      signer: { type: "agent", id: key.did },
       signature: "not-valid-base64url!!!",
       signedAtMs: Date.now(),
     });
@@ -86,8 +76,8 @@ describe("createSignedChatBackend", () => {
   });
 
   test("createThread, sendMessage, grantAccess, listPosts, listThreads", async () => {
-    const agent = await createTestRelaySigner();
-    const peer = await createTestRelaySigner();
+    const agent = await createTestDidKeySigner();
+    const peer = await createTestDidKeySigner();
     const service = createChatService(createMemoryChatPersistence());
     const backend = createSignedChatBackend({
       client: asChatServiceClient(service),
@@ -120,8 +110,8 @@ describe("createSignedChatBackend", () => {
   });
 
   test("non-participants are rejected from thread operations", async () => {
-    const owner = await createTestRelaySigner();
-    const outsider = await createTestRelaySigner();
+    const owner = await createTestDidKeySigner();
+    const outsider = await createTestDidKeySigner();
     const service = createChatService(createMemoryChatPersistence());
     const backend = createSignedChatBackend({
       client: asChatServiceClient(service),

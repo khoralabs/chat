@@ -60,6 +60,11 @@
       "import": "./src/http/client.ts",
       "default": "./src/http/client.ts"
     },
+    "./http/config": {
+      "types": "./src/http/config.ts",
+      "import": "./src/http/config.ts",
+      "default": "./src/http/config.ts"
+    },
     "./http/routes": {
       "types": "./src/http/routes.ts",
       "import": "./src/http/routes.ts",
@@ -75,6 +80,11 @@
       "import": "./src/http/server.ts",
       "default": "./src/http/server.ts"
     },
+    "./sources": {
+      "types": "./src/sources.ts",
+      "import": "./src/sources.ts",
+      "default": "./src/sources.ts"
+    },
     "./testing": {
       "types": "./src/persistence/testing/index.ts",
       "import": "./src/persistence/testing/index.ts",
@@ -87,20 +97,17 @@
     }
   },
   "dependencies": {
+    "@khoralabs/did-key-identity": "^0.2.0",
     "@khoralabs/sourcemaps": "^0.1.0",
     "@noble/ed25519": "^3.1.0",
     "ai": "^7.0.9"
   },
   "peerDependencies": {
-    "@khoralabs/relay": "^0.2.0",
     "@khoralabs/sqlite-crypto": "^0.1.0",
     "@tursodatabase/serverless": "*",
     "typescript": "^5"
   },
   "peerDependenciesMeta": {
-    "@khoralabs/relay": {
-      "optional": true
-    },
     "@khoralabs/sqlite-crypto": {
       "optional": true
     },
@@ -109,7 +116,6 @@
     }
   },
   "devDependencies": {
-    "@khoralabs/relay": "^0.2.0",
     "@khoralabs/sqlite-crypto": "^0.1.0",
     "@tursodatabase/serverless": "latest",
     "@types/bun": "latest",

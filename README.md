@@ -16,8 +16,10 @@ Generic, use-case-agnostic messaging ledger libraries for Khora.
 | `./sqlite` | Bun `bun:sqlite` adapter (WAL, busy timeout; optional SQLCipher via `CHAT_SQLCIPHER_KEY`) |
 | `./turso-serverless` | Turso / local-sqlite SQL adapter |
 | `./turso-serverless/sql` | Low-level SQL helpers |
-| `./http` | ChatService-shaped HTTP/WS transport |
-| `./http/client` `./http/routes` `./http/service` `./http/server` | HTTP submodules |
+| `./http` | Browser-safe HTTP client + contracts + routes (no Bun.serve / sqlcipher) |
+| `./http/client` | Lean client + `ChatHttpClientError` / path + error-code re-exports |
+| `./http/config` `./http/routes` `./http/service` `./http/server` | Server/runtime HTTP submodules |
+| `./sources` | Browser-safe `ChatSourceWire` / `getMessageSources` (no Bun hash) |
 | `./agent` | DID-key `ChatSigner` adapter + signed agent chat backend over HTTP |
 | `./testing` | `runChatPersistenceContractTests` |
 
@@ -41,11 +43,11 @@ Channel
 
 Opt in with `withSignedChatPersistence` from `@khoralabs/chat/persistence`. Hosts provide `ChatSigner` / `ChatVerifier` (no crypto in chat packages). When wrapped, every committed post version is signed: `appendPost` requires a verified envelope; `completeStreamedPost` auto-signs via the signer.
 
-For DID-key agents, use `createDidKeyChatCrypto` and `createRemoteSignedChat` from `@khoralabs/chat/agent` with a `@khoralabs/relay` `RelaySigner` resolver.
+For DID-key agents, use `createDidKeyChatCrypto` and `createRemoteSignedChat` from `@khoralabs/chat/agent` with a `@khoralabs/did-key-identity` `Signer` resolver.
 
 ## HTTP transport
 
-`@khoralabs/chat/http` exposes `createChatService` over HTTP/WS with a shared-secret service token. It does **not** enforce app authz (sessions, SpiceDB, participant policy) — hosts own that layer and call chat HTTP as an internal ledger.
+`@khoralabs/chat/http` is the lean client/contracts/routes surface. Start a server with `@khoralabs/chat/http/server` (`startChatHttpServer`) and open storage with `@khoralabs/chat/http/service` (`createChatStorage`). The HTTP transport uses a shared-secret service token and does **not** enforce app authz (sessions, SpiceDB, participant policy) — hosts own that layer and call chat HTTP as an internal ledger.
 
 ```sh
 CHAT_INTERNAL_TOKEN=dev bun run --filter @khoralabs/chat start:http
