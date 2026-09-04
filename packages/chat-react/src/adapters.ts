@@ -1,5 +1,9 @@
-import type { ChatDocumentWire, ChatSourceWire, Post, ScopeRef } from "@khoralabs/chat";
-import { getMessageSources } from "@khoralabs/chat";
+import type { Post, ScopeRef } from "@khoralabs/chat";
+import {
+  type ChatDocumentWire,
+  type ChatSourceWire,
+  getMessageSources,
+} from "@khoralabs/chat/sources";
 import type { UIMessage } from "ai";
 import type { ChatAuthor } from "./ui/author-avatar.tsx";
 

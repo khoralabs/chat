@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { createMemoryChatPersistence } from "@khoralabs/chat/persistence";
-import { base58Encode } from "@khoralabs/relay/crypto";
+import { base58Encode } from "@khoralabs/relay/crypto/encoding";
 import { getPublicKeyAsync, signAsync } from "@noble/ed25519";
 
 import type { ChatServiceClient } from "../http/client.ts";
