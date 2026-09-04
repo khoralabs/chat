@@ -8,6 +8,11 @@ import { isChatNotFoundError } from "../errors.ts";
 
 import { createChatClient } from "./client.ts";
 import { resolveChatDbPath } from "./config.ts";
+import {
+  CHAT_HTTP_PATH,
+  CHAT_PROTOCOL_VERSION,
+  type ChatHealthResponse,
+} from "./contracts/http.ts";
 import { createChatRoutesWithParams, dispatchChatRoute } from "./routes.ts";
 import { createChatHttpRuntime } from "./service.ts";
 
@@ -146,4 +151,19 @@ test("tip, participants, and setPostVersionSignature are exposed", async () => {
 
 test("env db path resolves under CHAT_DATA_DIR", () => {
   expect(resolveChatDbPath()).toContain(path.join(dataDir, "chat.db"));
+});
+
+test("GET /health returns ok with protocol version", async () => {
+  const runtime = createChatHttpRuntime({
+    persistence: createMemoryChatPersistence(),
+  });
+  const routes = createChatRoutesWithParams(runtime.service, TEST_TOKEN);
+  const res = await dispatchChatRoute(
+    routes,
+    new Request(`http://chat.test${CHAT_HTTP_PATH.health}`, { method: "GET" }),
+  );
+  expect(res.status).toBe(200);
+  const body = (await res.json()) as ChatHealthResponse;
+  expect(body).toEqual({ ok: true, version: CHAT_PROTOCOL_VERSION });
+  runtime.close();
 });

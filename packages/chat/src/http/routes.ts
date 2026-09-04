@@ -3,7 +3,12 @@ import type { PostModelMetadata, PostUsage, ScopeRef, SignedEnvelope } from "../
 import { isChatNotFoundError } from "../errors.ts";
 import type { ChatService } from "../service.ts";
 import { CHAT_ERROR_CODE, type ChatErrorCode, chatErrorCodeForStatus } from "./contracts/errors.ts";
-import { CHAT_HTTP_PATH, chatRouteKey } from "./contracts/http.ts";
+import {
+  CHAT_HTTP_PATH,
+  CHAT_PROTOCOL_VERSION,
+  type ChatHealthResponse,
+  chatRouteKey,
+} from "./contracts/http.ts";
 
 function json(value: unknown, init?: ResponseInit): Response {
   return Response.json(value, init);
@@ -82,7 +87,10 @@ export function createChatRoutes(
   const authorized = resolveAuthorize(options);
 
   return {
-    [chatRouteKey("GET", CHAT_HTTP_PATH.health)]: async () => json({ ok: true }),
+    [chatRouteKey("GET", CHAT_HTTP_PATH.health)]: async () => {
+      const body: ChatHealthResponse = { ok: true, version: CHAT_PROTOCOL_VERSION };
+      return json(body);
+    },
 
     [chatRouteKey("POST", CHAT_HTTP_PATH.channelsGet)]: async (req) => {
       const error = await authorized(req);

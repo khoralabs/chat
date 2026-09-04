@@ -1,5 +1,13 @@
 /** HTTP path constants shared by chat client, routes, and server. */
 
+/** Protocol version returned by `GET /health`. */
+export const CHAT_PROTOCOL_VERSION = 1 as const;
+
+export type ChatHealthResponse = {
+  ok: true;
+  version: typeof CHAT_PROTOCOL_VERSION;
+};
+
 export const CHAT_HTTP_PATH = {
   health: "/health",
   channelsGet: "/channels/get",

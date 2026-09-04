@@ -8,8 +8,12 @@ import {
   resolveChatDbPath,
   sqlCipherKeyFromEnv,
 } from "./config.ts";
-import { CHAT_ERROR_CODE, chatErrorCodeForStatus } from "./contracts/errors.ts";
-import { CHAT_HTTP_PATH } from "./contracts/http.ts";
+import { CHAT_ERROR_CODE } from "./contracts/errors.ts";
+import {
+  CHAT_HTTP_PATH,
+  CHAT_PROTOCOL_VERSION,
+  type ChatHealthResponse,
+} from "./contracts/http.ts";
 import { createChatRoutesWithParams, dispatchChatRoute, requireInternalToken } from "./routes.ts";
 import { type ChatStorageConfig, createChatHttpRuntime, createChatStorage } from "./service.ts";
 
@@ -50,7 +54,8 @@ export async function startChatHttpServer(
     fetch(req, bunServer) {
       const url = new URL(req.url);
       if (req.method === "GET" && url.pathname === CHAT_HTTP_PATH.health) {
-        return Response.json({ ok: true });
+        const body: ChatHealthResponse = { ok: true, version: CHAT_PROTOCOL_VERSION };
+        return Response.json(body);
       }
       if (url.pathname.startsWith(CHAT_HTTP_PATH.threadsWsPrefix)) {
         const authError = requireInternalToken(req, token);

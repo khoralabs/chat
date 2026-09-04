@@ -23,6 +23,8 @@ export {
 } from "./contracts/errors.ts";
 export {
   CHAT_HTTP_PATH,
+  CHAT_PROTOCOL_VERSION,
+  type ChatHealthResponse,
   type ChatHttpPathKey,
   chatPostAbortPath,
   chatPostCompletePath,
