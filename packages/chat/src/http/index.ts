@@ -7,15 +7,6 @@ export {
 } from "./client.ts";
 export { ChatHttpClientError, throwChatHttpClientError } from "./client-error.ts";
 export {
-  CHAT_SQLCIPHER_ENV,
-  chatHttpPort,
-  chatInternalToken,
-  DEV_SQLCIPHER_KEY,
-  resolveChatDataDir,
-  resolveChatDbPath,
-  sqlCipherKeyFromEnv,
-} from "./config.ts";
-export {
   CHAT_ERROR_CODE,
   type ChatErrorCode,
   type ChatErrorEnvelope,
@@ -44,17 +35,3 @@ export {
   readJson,
   requireInternalToken,
 } from "./routes.ts";
-export {
-  type ChatHttpServerHandle,
-  type StartChatHttpServerOptions,
-  startChatHttpServer,
-} from "./server.ts";
-export {
-  type ChatHttpRuntime,
-  type ChatStorage,
-  type ChatStorageConfig,
-  type CreateChatHttpRuntimeOptions,
-  createChatHttpRuntime,
-  createChatStorage,
-  isChatNotFound,
-} from "./service.ts";

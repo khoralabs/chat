@@ -60,6 +60,11 @@
       "import": "./src/http/client.ts",
       "default": "./src/http/client.ts"
     },
+    "./http/config": {
+      "types": "./src/http/config.ts",
+      "import": "./src/http/config.ts",
+      "default": "./src/http/config.ts"
+    },
     "./http/routes": {
       "types": "./src/http/routes.ts",
       "import": "./src/http/routes.ts",
@@ -74,6 +79,11 @@
       "types": "./src/http/server.ts",
       "import": "./src/http/server.ts",
       "default": "./src/http/server.ts"
+    },
+    "./sources": {
+      "types": "./src/sources.ts",
+      "import": "./src/sources.ts",
+      "default": "./src/sources.ts"
     },
     "./testing": {
       "types": "./src/persistence/testing/index.ts",
@@ -92,7 +102,7 @@
     "ai": "^7.0.9"
   },
   "peerDependencies": {
-    "@khoralabs/relay": "^0.2.0",
+    "@khoralabs/relay": "^0.3.0",
     "@khoralabs/sqlite-crypto": "^0.1.0",
     "@tursodatabase/serverless": "*",
     "typescript": "^5"
@@ -109,7 +119,7 @@
     }
   },
   "devDependencies": {
-    "@khoralabs/relay": "^0.2.0",
+    "@khoralabs/relay": "^0.3.0",
     "@khoralabs/sqlite-crypto": "^0.1.0",
     "@tursodatabase/serverless": "latest",
     "@types/bun": "latest",

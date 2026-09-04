@@ -210,6 +210,7 @@ export async function buildPackage(pkgDir: string): Promise<void> {
 function entryBuildTarget(entry: string): "browser" | "node" {
   const normalized = entry.replaceAll("\\", "/");
   if (normalized.endsWith("/http/client.ts")) return "browser";
+  if (normalized.endsWith("/sources.ts")) return "browser";
   return "node";
 }
 
