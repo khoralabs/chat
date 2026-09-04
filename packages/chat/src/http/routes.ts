@@ -2,10 +2,15 @@ import type { UIMessage } from "ai";
 import type { PostModelMetadata, PostUsage, ScopeRef, SignedEnvelope } from "../domain.ts";
 import { isChatNotFoundError } from "../errors.ts";
 import type { ChatService } from "../service.ts";
+import { CHAT_ERROR_CODE, type ChatErrorCode, chatErrorCodeForStatus } from "./contracts/errors.ts";
 import { CHAT_HTTP_PATH, chatRouteKey } from "./contracts/http.ts";
 
 function json(value: unknown, init?: ResponseInit): Response {
   return Response.json(value, init);
+}
+
+function jsonError(message: string, status: number, code?: ChatErrorCode): Response {
+  return json({ error: message, code: code ?? chatErrorCodeForStatus(status) }, { status });
 }
 
 function extractBearerToken(req: Request): string {
@@ -22,7 +27,7 @@ export type AuthorizeRequest = (req: Request) => Response | null | Promise<Respo
 export function requireInternalToken(req: Request, expected: string): Response | null {
   const token = extractBearerToken(req);
   if (token.length === 0 || token !== expected) {
-    return json({ error: "Unauthorized" }, { status: 401 });
+    return jsonError("Unauthorized", 401, CHAT_ERROR_CODE.unauthorized);
   }
   return null;
 }
@@ -46,10 +51,10 @@ function stringField(body: Record<string, unknown>, key: string): string | null 
 
 function errorResponse(error: unknown): Response {
   if (isChatNotFoundError(error)) {
-    return json({ error: error.message }, { status: 404 });
+    return jsonError(error.message, 404, CHAT_ERROR_CODE.not_found);
   }
   const message = error instanceof Error ? error.message : String(error);
-  return json({ error: message }, { status: 500 });
+  return jsonError(message, 500, CHAT_ERROR_CODE.internal_error);
 }
 
 export type RouteHandler = (req: Request) => Response | Promise<Response>;
@@ -84,7 +89,7 @@ export function createChatRoutes(
       if (error !== null) return error;
       const body = await readJson<Record<string, unknown>>(req);
       const channelId = body === null ? null : stringField(body, "channelId");
-      if (channelId === null) return json({ error: "channelId is required" }, { status: 400 });
+      if (channelId === null) return jsonError("channelId is required", 400);
       try {
         return json(await chat.getChannel(channelId));
       } catch (err) {
@@ -97,7 +102,7 @@ export function createChatRoutes(
       if (error !== null) return error;
       const body = await readJson<Record<string, unknown>>(req);
       const id = body === null ? null : stringField(body, "id");
-      if (id === null) return json({ error: "id is required" }, { status: 400 });
+      if (id === null) return jsonError("id is required", 400);
       try {
         return json(
           await chat.createChannel({
@@ -115,7 +120,7 @@ export function createChatRoutes(
       if (error !== null) return error;
       const body = await readJson<Record<string, unknown>>(req);
       const threadId = body === null ? null : stringField(body, "threadId");
-      if (threadId === null) return json({ error: "threadId is required" }, { status: 400 });
+      if (threadId === null) return jsonError("threadId is required", 400);
       try {
         return json(await chat.getThread(threadId));
       } catch (err) {
@@ -132,7 +137,7 @@ export function createChatRoutes(
         metadata?: Record<string, unknown>;
       }>(req);
       if (body?.id === undefined || body.root === undefined) {
-        return json({ error: "id and root are required" }, { status: 400 });
+        return jsonError("id and root are required", 400);
       }
       try {
         return json(
@@ -157,7 +162,7 @@ export function createChatRoutes(
         cursor?: string;
       }>(req);
       if (body?.channelId === undefined) {
-        return json({ error: "channelId is required" }, { status: 400 });
+        return jsonError("channelId is required", 400);
       }
       try {
         return json(
@@ -178,7 +183,7 @@ export function createChatRoutes(
       if (error !== null) return error;
       const body = await readJson<{ threadId?: string; limit?: number; cursor?: string }>(req);
       if (body?.threadId === undefined) {
-        return json({ error: "threadId is required" }, { status: 400 });
+        return jsonError("threadId is required", 400);
       }
       try {
         return json(
@@ -194,7 +199,7 @@ export function createChatRoutes(
       if (error !== null) return error;
       const body = await readJson<Record<string, unknown>>(req);
       const threadId = body === null ? null : stringField(body, "threadId");
-      if (threadId === null) return json({ error: "threadId is required" }, { status: 400 });
+      if (threadId === null) return jsonError("threadId is required", 400);
       try {
         return json({ tip: await chat.getThreadTip(threadId) });
       } catch (err) {
@@ -207,7 +212,7 @@ export function createChatRoutes(
       if (error !== null) return error;
       const body = await readJson<Record<string, unknown>>(req);
       const threadId = body === null ? null : stringField(body, "threadId");
-      if (threadId === null) return json({ error: "threadId is required" }, { status: 400 });
+      if (threadId === null) return jsonError("threadId is required", 400);
       try {
         return json({ participants: await chat.listThreadParticipants(threadId) });
       } catch (err) {
@@ -225,7 +230,7 @@ export function createChatRoutes(
         actor?: ScopeRef;
       }>(req);
       if (body?.threadId === undefined || body.scope === undefined || body.actor === undefined) {
-        return json({ error: "threadId, scope, and actor are required" }, { status: 400 });
+        return jsonError("threadId, scope, and actor are required", 400);
       }
       try {
         return json(
@@ -254,7 +259,7 @@ export function createChatRoutes(
         signature?: SignedEnvelope;
       }>(req);
       if (body?.threadId === undefined || body.author === undefined || body.message === undefined) {
-        return json({ error: "threadId, author, and message are required" }, { status: 400 });
+        return jsonError("threadId, author, and message are required", 400);
       }
       try {
         return json(
@@ -278,7 +283,7 @@ export function createChatRoutes(
       if (error !== null) return error;
       const body = await readJson<{ versionId?: string; signature?: SignedEnvelope }>(req);
       if (body?.versionId === undefined || body.signature === undefined) {
-        return json({ error: "versionId and signature are required" }, { status: 400 });
+        return jsonError("versionId and signature are required", 400);
       }
       try {
         await chat.setPostVersionSignature(body.versionId, body.signature);
@@ -298,7 +303,7 @@ export function createChatRoutes(
         threadId?: string;
       }>(req);
       if (body?.author === undefined || body.message === undefined || body.threadId === undefined) {
-        return json({ error: "threadId, author, and message are required" }, { status: 400 });
+        return jsonError("threadId, author, and message are required", 400);
       }
       try {
         return json(
@@ -319,10 +324,10 @@ export function createChatRoutes(
       if (error !== null) return error;
       const url = new URL(req.url);
       const postId = url.pathname.split("/").at(-2);
-      if (postId === undefined) return json({ error: "postId is required" }, { status: 400 });
+      if (postId === undefined) return jsonError("postId is required", 400);
       const body = await readJson<ApplyPostDeltaBody>(req);
       if (body?.message === undefined) {
-        return json({ error: "message is required" }, { status: 400 });
+        return jsonError("message is required", 400);
       }
       try {
         return json(
@@ -344,7 +349,7 @@ export function createChatRoutes(
       if (error !== null) return error;
       const url = new URL(req.url);
       const postId = url.pathname.split("/").at(-2);
-      if (postId === undefined) return json({ error: "postId is required" }, { status: 400 });
+      if (postId === undefined) return jsonError("postId is required", 400);
       const body = await readJson<CompleteStreamedPostBody>(req);
       try {
         return json(
@@ -364,7 +369,7 @@ export function createChatRoutes(
       if (error !== null) return error;
       const url = new URL(req.url);
       const postId = url.pathname.split("/").at(-2);
-      if (postId === undefined) return json({ error: "postId is required" }, { status: 400 });
+      if (postId === undefined) return jsonError("postId is required", 400);
       try {
         const post = await chat.abortStreamedPost({ postId });
         return json({ post });
@@ -416,7 +421,7 @@ export function createChatRoutesWithParams(
         body?.author === undefined ||
         body.message === undefined
       ) {
-        return json({ error: "threadId, author, and message are required" }, { status: 400 });
+        return jsonError("threadId, author, and message are required", 400);
       }
       try {
         return json(
@@ -459,6 +464,6 @@ export async function dispatchChatRoute(
 
   const key = `${req.method} ${url.pathname}`;
   const handler = routes[key];
-  if (handler === undefined) return json({ error: "Not found" }, { status: 404 });
+  if (handler === undefined) return jsonError("Not found", 404);
   return handler(req);
 }

@@ -15,6 +15,13 @@ export {
   sqlCipherKeyFromEnv,
 } from "./config.ts";
 export {
+  CHAT_ERROR_CODE,
+  type ChatErrorCode,
+  type ChatErrorEnvelope,
+  chatErrorCodeForStatus,
+  parseChatErrorEnvelope,
+} from "./contracts/errors.ts";
+export {
   CHAT_HTTP_PATH,
   type ChatHttpPathKey,
   chatPostAbortPath,

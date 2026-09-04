@@ -8,6 +8,7 @@ import {
   resolveChatDbPath,
   sqlCipherKeyFromEnv,
 } from "./config.ts";
+import { CHAT_ERROR_CODE, chatErrorCodeForStatus } from "./contracts/errors.ts";
 import { CHAT_HTTP_PATH } from "./contracts/http.ts";
 import { createChatRoutesWithParams, dispatchChatRoute, requireInternalToken } from "./routes.ts";
 import { type ChatStorageConfig, createChatHttpRuntime, createChatStorage } from "./service.ts";
@@ -58,7 +59,10 @@ export async function startChatHttpServer(
           url.pathname.slice(CHAT_HTTP_PATH.threadsWsPrefix.length),
         );
         if (threadId.length === 0) {
-          return Response.json({ error: "threadId is required" }, { status: 400 });
+          return Response.json(
+            { error: "threadId is required", code: CHAT_ERROR_CODE.invalid_request },
+            { status: 400 },
+          );
         }
         const upgraded = bunServer.upgrade(req, { data: { threadId } satisfies WsData });
         if (upgraded) return undefined;
