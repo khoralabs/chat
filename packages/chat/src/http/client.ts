@@ -12,6 +12,7 @@ import type {
 } from "../persistence/core/persistence/types.ts";
 import type { ChatService } from "../service.ts";
 import type { SignedEnvelope } from "../types.ts";
+import { throwChatHttpClientError } from "./client-error.ts";
 import {
   CHAT_HTTP_PATH,
   chatPostAbortPath,
@@ -36,7 +37,7 @@ async function readJson<T>(res: Response): Promise<T> {
         throw new ChatNotFoundError(match[1].toLowerCase(), match[2]);
       }
     }
-    throw new Error(message);
+    throwChatHttpClientError(res.status, res.statusText, text);
   }
   return (text.length > 0 ? JSON.parse(text) : {}) as T;
 }

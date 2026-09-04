@@ -5,6 +5,7 @@ export {
   createChatClient,
   type StartStreamedPostBody,
 } from "./client.ts";
+export { ChatHttpClientError, throwChatHttpClientError } from "./client-error.ts";
 export {
   CHAT_SQLCIPHER_ENV,
   chatHttpPort,
