@@ -94,6 +94,11 @@
       "types": "./src/agent/index.ts",
       "import": "./src/agent/index.ts",
       "default": "./src/agent/index.ts"
+    },
+    "./react-client": {
+      "types": "./src/react-client.ts",
+      "import": "./src/react-client.ts",
+      "default": "./src/react-client.ts"
     }
   },
   "dependencies": {

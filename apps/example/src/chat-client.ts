@@ -1,4 +1,3 @@
-import type { Thread } from "@khoralabs/chat";
 import type {
   AppendPostInput,
   Channel,
@@ -8,8 +7,9 @@ import type {
   ListThreadsInput,
   Post,
   PostPage,
+  Thread,
   ThreadPage,
-} from "@khoralabs/chat-react/client";
+} from "@khoralabs/chat";
 
 async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {

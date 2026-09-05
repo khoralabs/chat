@@ -1,20 +1,5 @@
-import {
-  ChannelRoot,
-  ChatProvider,
-  type DisplayMessage,
-  PostAuthor,
-  PostItem,
-  PostList,
-  PostParts,
-  postsToDisplayMessages,
-  ThreadRoot,
-  useAgentLoadingIndicator,
-  useChannel,
-  useChatDragDrop,
-  usePostComposer,
-  useThreadPosts,
-  useThreads,
-} from "@khoralabs/chat-react";
+import type { ChatStatus } from "ai";
+import { useEffect, useMemo, useState } from "react";
 import {
   Attachment,
   type AttachmentData,
@@ -56,9 +41,24 @@ import {
   ToolHeader,
   ToolInput,
   ToolOutput,
-} from "@khoralabs/chat-react/ui";
-import type { ChatStatus } from "ai";
-import { useEffect, useMemo, useState } from "react";
+} from "@/components/chat";
+import {
+  ChannelRoot,
+  ChatProvider,
+  type DisplayMessage,
+  PostAuthor,
+  PostItem,
+  PostList,
+  PostParts,
+  postsToDisplayMessages,
+  ThreadRoot,
+  useAgentLoadingIndicator,
+  useChannel,
+  useChatDragDrop,
+  usePostComposer,
+  useThreadPosts,
+  useThreads,
+} from "@/components/chat/provider";
 import "./index.css";
 import { chatClient, type DemoBootstrap, loadDemoBootstrap, runAgent } from "./chat-client";
 
@@ -235,7 +235,7 @@ export function App() {
             <header className="space-y-3">
               <p className="text-sm font-medium text-muted-foreground">Chat framework demo</p>
               <h1 className="text-4xl font-semibold tracking-tight">
-                `@khoralabs/chat-react` catalog and live agent
+                registry chat UI catalog and live agent
               </h1>
               <p className="max-w-3xl text-muted-foreground">
                 Static examples cover Reasoning, tool Confirmation, Chain of Thought, and the rest
@@ -553,7 +553,7 @@ function ComponentCatalog() {
                 />
                 <ChainOfThoughtStep
                   label="Search component docs"
-                  description="Match Elements patterns to chat-react exports"
+                  description="Match Elements patterns to registry chat exports"
                   status="complete"
                 >
                   <ChainOfThoughtSearchResults>
