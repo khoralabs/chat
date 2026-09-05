@@ -8,7 +8,6 @@ export type PublishablePackage = {
 
 export const PUBLISH_ORDER: PublishablePackage[] = [
   { name: "@khoralabs/chat", dir: "packages/chat" },
-  { name: "@khoralabs/chat-react", dir: "packages/chat-react" },
 ];
 
 export function isSemver(version: string): boolean {
