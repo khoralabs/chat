@@ -5,7 +5,8 @@ Generic, use-case-agnostic messaging ledger libraries for Khora.
 | Package | Purpose |
 |---------|---------|
 | `@khoralabs/chat` | Contracts, hashing, lineage, `createChatService`, persistence backends, HTTP/WS |
-| `@khoralabs/chat-react` | Headless hooks and compound components |
+
+React UI: install from the [`khoralabs/react`](https://github.com/khoralabs/react) registry (`bunx shadcn@latest add khoralabs/react/chat`). Domain host port: `ChatClient` / `mergePostIntoList` on `@khoralabs/chat` (`.`, `./react-client`).
 
 ## `@khoralabs/chat` entrypoints
 
@@ -57,7 +58,7 @@ Optional at-rest encryption: set `CHAT_SQLCIPHER_KEY` (≥16 chars) to enable SQ
 
 ## Release
 
-Publishable packages: `@khoralabs/chat` (see `scripts/publishable-packages.ts`). `@khoralabs/chat-react` stays in-repo for now but is not published — prefer `khoralabs/react` registry items.
+Publishable packages: `@khoralabs/chat` (see `scripts/publishable-packages.ts`).
 
 ```sh
 bun run build

@@ -15,7 +15,7 @@ export type ChatSourceWire<Locators extends Record<string, unknown> = Record<str
   sourceRef: SourceRef<Locators> | ContentAddressedRef<Locators>;
 };
 
-/** Known keys hosts may set on `UIMessage.metadata` for chat-react display. */
+/** Known keys hosts may set on `UIMessage.metadata` for chat UI display. */
 export type ChatMessageMetadata = {
   kickoff?: boolean;
   displayText?: string;

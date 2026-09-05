@@ -9,7 +9,7 @@
     "check:write": "biome check --write .",
     "format": "biome check --write .",
     "format:check": "biome check .",
-    "typecheck": "bun run --filter '@khoralabs/chat' typecheck && bun run --filter '@khoralabs/chat-react' typecheck",
+    "typecheck": "bun run --filter '@khoralabs/chat' typecheck",
     "test": "bun test",
     "prepare": "husky",
     "review": "agent-review run --scope staged --include-workstream",
@@ -31,17 +31,6 @@
     "typescript": "^5"
   },
   "workspaces": [
-    "packages/*",
-    "apps/*"
-  ],
-  "overrides": {
-    "shiki": "3.23.0"
-  },
-  "dependencies": {
-    "@streamdown/cjk": "^1.0.3",
-    "@streamdown/code": "^1.1.1",
-    "@streamdown/math": "^1.0.2",
-    "@streamdown/mermaid": "^1.0.2",
-    "streamdown": "^2.5.0"
-  }
+    "packages/*"
+  ]
 }
